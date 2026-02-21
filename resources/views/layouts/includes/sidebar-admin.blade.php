@@ -46,9 +46,8 @@
          </li>
          <li class="sidebar-title">Ajustes</li>
 
-
-         <li class="sidebar-item {{ request()->is('admin/ajustes*') ? 'active' : '' }}">
-             <a href="{{ url('/admin/ajustes') }}" class='sidebar-link'>
+         <li class="sidebar-item {{ request()->is('admin/configuracion*') ? 'active' : '' }}">
+             <a href="{{ url('/admin/configuracion') }}" class='sidebar-link'>
                  <i class="bi bi-gear-fill"></i>
                  <span>Configuración</span>
              </a>

@@ -2,17 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Empresa;
+use App\Models\User;
 use Illuminate\Http\Request;
 
-class EmpresaController extends Controller
+class UsuarioController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        //
+        $usuarios = User::all();
+        return view('admin.usuarios.index', compact('usuarios'));
     }
 
     /**
@@ -34,7 +35,7 @@ class EmpresaController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Empresa $empresa)
+    public function show(string $id)
     {
         //
     }
@@ -42,7 +43,7 @@ class EmpresaController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Empresa $empresa)
+    public function edit(string $id)
     {
         //
     }
@@ -50,7 +51,7 @@ class EmpresaController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Empresa $empresa)
+    public function update(Request $request, string $id)
     {
         //
     }
@@ -58,7 +59,7 @@ class EmpresaController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Empresa $empresa)
+    public function destroy(string $id)
     {
         //
     }
