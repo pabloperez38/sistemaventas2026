@@ -9,11 +9,11 @@
                     <div class="card-content">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <h4 class="card-title">
-                                Listado de usuarios
+                                Listado de categorías
                             </h4>
 
-                            <a href="{{ route('admin.usuarios.create') }}" class="btn icon icon-left btn-success">
-                                <i class="bi bi-plus-circle"></i> Agregar usuario
+                            <a href="{{ route('admin.categorias.create') }}" class="btn icon icon-left btn-success">
+                                <i class="bi bi-plus-circle"></i> Agregar categoría
                             </a>
                         </div>
 
@@ -21,30 +21,36 @@
 
                             <div class="table-responsive shadow-sm rounded">
                                 <table class="table table-hover align-middle mb-0">
-                                    <thead class="table-dark text-center">
+                                    <thead class="table-dark">
                                         <tr>
 
                                             <th>Nombre</th>
-                                            <th>Email</th>
-
-                                            <th class="text-center">Acciones</th>
+                                            <th>Estado</th>
+                                            <th class="text-end">Acciones</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @forelse ($usuarios as $usuario)
+                                        @forelse ($categorias as $categoria)
                                             <tr>
 
-                                                <td class="fw-semibold">
-                                                    {{ $usuario->name }}
+                                                <td>
+                                                    {{ $categoria->nombre }}
                                                 </td>
-                                                <td>{{ $usuario->email }}</td>
+                                                <td>
+                                                    @if ($categoria->estado == 1)
+                                                        <span class="badge bg-success">Activo</span>
+                                                    @else
+                                                        <span class="badge bg-danger">Inactiva</span>
+                                                    @endif
 
-                                                <td class="text-center">
-                                                    <a href="{{ route('admin.usuarios.edit', $usuario->id) }}"
+                                                </td>
+
+                                                <td class="text-end">
+                                                    <a href="{{ route('admin.categorias.edit', $categoria->id) }}"
                                                         class="btn icon btn-warning rounded-circle btn-sm">
                                                         <i class="bi bi-pencil"></i>
                                                     </a>
-                                                    <form action="{{ route('admin.usuarios.destroy', $usuario->id) }}"
+                                                    <form action="{{ route('admin.categorias.destroy', $categoria->id) }}"
                                                         method="post" class="d-inline delete-form">
                                                         @csrf
                                                         @method('DELETE')
@@ -59,7 +65,7 @@
                                         @empty
                                             <tr>
                                                 <td colspan="3" class="text-center text-muted py-4">
-                                                    No hay usuarios registrados
+                                                    No hay categorías registradas
                                                 </td>
                                             </tr>
                                         @endforelse

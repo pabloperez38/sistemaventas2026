@@ -1,6 +1,6 @@
 @php
-    // $configuracion = \App\Models\Ajuste::first();
-    // $imagen_login = $configuracion ? $configuracion->imagen_login : null;
+    $configuracion = \App\Models\Configuracion::first();
+    $imagen_login = $configuracion ? $configuracion->imagen_login : null;
 @endphp
 
 <!doctype html>
@@ -9,7 +9,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login - {{ $configuracion->nombre ?? '' }}</title>
+    <title>Login - {{ $configuracion->nombre_empresa ?? '' }}</title>
 
     <link rel="shortcut icon" href="./assets/compiled/svg/favicon.svg" type="image/x-icon" />
     <link rel="shortcut icon"
@@ -24,16 +24,16 @@
     <script src="assets/static/js/initTheme.js"></script>
     <div id="auth">
         <div class="row h-100">
-            <div class="col-lg-5 col-12">
+            <div class="col-lg-4 col-12">
                 <div id="auth-left">
-                    {{--   @if ($configuracion)
+                    @if ($configuracion)
                         <div class="auth-logo">
                             <a href="/login"><img src="{{ asset('storage/' . $configuracion->logo) }}"
-                                    alt="{{ $configuracion->nombre ?? '' }}" /></a>
+                                    alt="{{ $configuracion->nombre_empresa ?? '' }}" /></a>
                         </div>
-                    @endif --}}
+                    @endif
 
-                    {{--    <h1 class="auth-title">{{ $configuracion->nombre ?? '' }}</h1> --}}
+                    <h1 class="auth-title">{{ $configuracion->nombre_empresa ?? '' }}</h1>
 
                     <p class="auth-subtitle mb-3">
                         Ingreso al sistema
@@ -89,12 +89,12 @@
                     </div>
                 </div>
             </div>
-            <div class="col-lg-7 d-none d-lg-block">
+            <div class="col-lg-8 d-none d-lg-block">
                 <div id="auth-right">
-                    {{--   @if ($imagen_login)
+                    @if ($imagen_login)
                         <img src="{{ asset('storage/' . $imagen_login) }}" alt="Imagen de login"
                             style="width: 100%; height: 100%; object-fit: cover;" />
-                    @endif --}}
+                    @endif
                 </div>
             </div>
         </div>

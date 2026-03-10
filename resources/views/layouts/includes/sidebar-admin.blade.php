@@ -20,24 +20,20 @@
                  <span>Usuarios</span>
              </a>
          </li>
-         <li class="sidebar-item {{ request()->is('admin/marcas*') ? 'active' : '' }} ">
-             <a href="{{ url('/admin/marcas') }}" class='sidebar-link'>
-                 <i class="bi bi-list"></i>
-                 <span>Marcas</span>
-             </a>
-         </li>
-         <li class="sidebar-item {{ request()->is('admin/talles*') ? 'active' : '' }} ">
-             <a href="{{ url('/admin/talles') }}" class='sidebar-link'>
-                 <i class="bi bi-list"></i>
-                 <span>Talles</span>
-             </a>
-         </li>
          <li class="sidebar-item {{ request()->is('admin/categoria*') ? 'active' : '' }} ">
              <a href="{{ url('/admin/categorias') }}" class='sidebar-link'>
                  <i class="bi bi-tags"></i>
                  <span>Categorías</span>
              </a>
          </li>
+         <li class="sidebar-item {{ request()->is('admin/marcas*') ? 'active' : '' }} ">
+             <a href="{{ url('/admin/marcas') }}" class='sidebar-link'>
+                 <i class="bi bi-list"></i>
+                 <span>Marcas</span>
+             </a>
+         </li>
+
+
          <li class="sidebar-item {{ request()->is('admin/producto*') ? 'active' : '' }} ">
              <a href="{{ url('/admin/productos') }}" class='sidebar-link'>
                  <i class="bi bi-box-seam"></i>

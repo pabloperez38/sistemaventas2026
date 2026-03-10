@@ -32,8 +32,8 @@ class DatabaseSeeder extends Seeder
             'direccion' => 'Calle Falsa 123',
             'telefono' => '555-1234',
             'email' => 'info@miempresa.com',
-            'logo' => '',
-            'imagen_login' => '',
+            'logo' => 'logos/logo.png',
+            'imagen_login' => 'imagenes_login/fondo.jpg',
             'descripcion' => 'Empresa dedicada a la venta de productos de calidad.',
             'cuit' => '30-12345678-9',
             'ciudad' => 'Buenos Aires'

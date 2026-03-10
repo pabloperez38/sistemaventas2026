@@ -1,3 +1,6 @@
+@php
+    $configuracion = \App\Models\Configuracion::first();
+@endphp
 <!doctype html>
 <html lang="es">
 
@@ -24,11 +27,12 @@
         <div id="sidebar">
             <div class="sidebar-wrapper active">
                 <div class="sidebar-header position-relative">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="logo">
-                            <a href="index.html"><img src="{{ asset('assets/compiled/svg/logo.svg') }}" alt="Logo"
-                                    srcset="" /></a>
+                    <div class="justify-content-between align-items-center">
+                        <div class="logo mb-5">
+                            <a href="/"><img src="{{ asset('storage/' . $configuracion->logo) }}"
+                                    alt="{{ $configuracion->nombre_empresa ?? '' }}" /></a>
                         </div>
+
                         <div class="theme-toggle d-flex gap-2 align-items-center mt-2">
                             <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
                                 aria-hidden="true" role="img" class="iconify iconify--system-uicons" width="20"
@@ -59,12 +63,11 @@
                                 </path>
                             </svg>
                         </div>
-                        <div class="sidebar-toggler x">
-                            <a href="#" class="sidebar-hide d-xl-none d-block"><i
-                                    class="bi bi-x bi-middle"></i></a>
-                        </div>
+
                     </div>
                 </div>
+
+                <hr>
                 @include('layouts.includes.sidebar-admin')
             </div>
         </div>
