@@ -7,6 +7,9 @@ use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use App\Models\Producto;
+use Database\Seeders\CategoriaSeeder;
+use Database\Seeders\MarcaSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -18,16 +21,19 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // User::factory(10)->create();
+        $this->call([
+            CategoriaSeeder::class,
+            MarcaSeeder::class,
+            RoleSeeder::class
+        ]);    
 
-        $this->call(RoleSeeder::class);
-
-        User::create([
+        User::firstOrCreate([
             'name' => 'Pablo Pérez',
             'email' => 'pablo.eluniversoweb@gmail.com',
             'password' => Hash::make('12345678'),
         ])->assignRole('Administrador');
 
-        Configuracion::create([
+        Configuracion::firstOrCreate([
             'nombre_empresa' => 'Mi Empresa',
             'direccion' => 'Calle Falsa 123',
             'telefono' => '555-1234',
@@ -38,5 +44,8 @@ class DatabaseSeeder extends Seeder
             'cuit' => '30-12345678-9',
             'ciudad' => 'Buenos Aires'
         ]);
+
+
+        Producto::factory()->count(200)->create();
     }
 }

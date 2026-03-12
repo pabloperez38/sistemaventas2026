@@ -27,14 +27,9 @@ class UsuarioController extends Controller
         return view('admin.usuarios.create', compact('roles'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //return response()->json($request->all());
-
-        $response = $request->validate([
+        $data = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
@@ -55,13 +50,11 @@ class UsuarioController extends Controller
             'role.exists' => 'El rol seleccionado no es válido.',
         ]);
 
-        $usuario = User::create([
-            'name' => $response['name'],
-            'email' => $response['email'],
-            'password' => Hash::make($response['password']),
-        ]);
+        $data['password'] = Hash::make($data['password']);
 
-        $usuario->assignRole($response['role']);
+        $usuario = User::create($data);
+
+        $usuario->assignRole($data['role']);
 
         return redirect()->route('admin.usuarios.index')->with('swal', [
             'icon' => 'success',
@@ -73,7 +66,7 @@ class UsuarioController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show($id)
     {
         //
     }
@@ -81,24 +74,64 @@ class UsuarioController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit($id)
     {
-        //
+        $usuario = User::findOrFail($id);
+        $roles = Role::all();
+        return view('admin.usuarios.edit', compact('usuario', 'roles'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, $id)
     {
-        //
+        $usuario = User::findOrFail($id);
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email,' . $usuario->id,
+            'password' => 'nullable|min:6',
+            'role' => 'required|exists:roles,name',
+        ]);
+
+        $data = $request->only(['name', 'email']);
+
+        if ($request->filled('password')) {
+            $data['password'] = Hash::make($request->password);
+        }
+
+        $usuario->update($data);
+
+        $usuario->syncRoles([$request->role]);
+
+        return redirect()->route('admin.usuarios.index')->with('swal', [
+            'icon' => 'success',
+            'title' => 'Usuario actualizado exitosamente',
+            'timer' => 2000
+        ]);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy($id)
     {
-        //
+        if ($id == 1) {
+            return redirect()->route('admin.usuarios.index')->with('swal', [
+                'icon' => 'error',
+                'title' => 'No se puede eliminar el administrador principal',
+                'timer' => 2000
+            ]);
+        }
+
+        $usuario = User::findOrFail($id);
+        $usuario->delete();
+
+        return redirect()->route('admin.usuarios.index')->with('swal', [
+            'icon' => 'success',
+            'title' => 'Usuario eliminado exitosamente',
+            'timer' => 2000
+        ]);
     }
 }

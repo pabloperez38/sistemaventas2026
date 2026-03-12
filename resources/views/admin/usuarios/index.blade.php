@@ -21,37 +21,38 @@
 
                             <div class="table-responsive shadow-sm rounded">
                                 <table class="table table-hover align-middle mb-0">
-                                    <thead class="table-dark text-center">
+                                    <thead class="table-dark">
                                         <tr>
 
                                             <th>Nombre</th>
                                             <th>Email</th>
-
-                                            <th class="text-center">Acciones</th>
+                                            <th>Rol</th>
+                                            <th class="text-end">Acciones</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @forelse ($usuarios as $usuario)
                                             <tr>
 
-                                                <td class="fw-semibold">
+                                                <td>
                                                     {{ $usuario->name }}
                                                 </td>
                                                 <td>{{ $usuario->email }}</td>
+                                                <td>{{ $usuario->roles->pluck('name')->first() }}</td>
 
-                                                <td class="text-center">
+                                                <td class="text-end">
                                                     <a href="{{ route('admin.usuarios.edit', $usuario->id) }}"
-                                                        class="btn icon btn-warning rounded-circle btn-sm">
-                                                        <i class="bi bi-pencil"></i>
+                                                        class="btn icon icon-left btn-warning btn-sm">
+                                                        <i class="bi bi-pencil"></i> Editar
                                                     </a>
                                                     <form action="{{ route('admin.usuarios.destroy', $usuario->id) }}"
                                                         method="post" class="d-inline delete-form">
                                                         @csrf
                                                         @method('DELETE')
                                                         <button type="submit"
-                                                            class="btn icon btn-danger btn-sm rounded-circle"
+                                                            class="btn icon icon-left btn-danger btn-sm"
                                                             title="Eliminar">
-                                                            <i class="bi bi-trash-fill text-white"></i>
+                                                            <i class="bi bi-trash-fill text-white"></i> Eliminar
                                                         </button>
                                                     </form>
                                                 </td>

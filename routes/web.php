@@ -3,6 +3,8 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\ConfiguracionController;
+use App\Http\Controllers\MarcaController;
+use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UsuarioController;
 use Illuminate\Support\Facades\Auth;
@@ -41,3 +43,27 @@ Route::post('/admin/categorias', [CategoriaController::class, 'store'])->name('a
 Route::get('/admin/categorias/{id}/edit', [CategoriaController::class, 'edit'])->name('admin.categorias.edit')->middleware('auth');
 Route::put('/admin/categorias/{id}', [CategoriaController::class, 'update'])->name('admin.categorias.update')->middleware('auth');
 Route::delete('/admin/categorias/{id}', [CategoriaController::class, 'destroy'])->name('admin.categorias.destroy')->middleware('auth');
+Route::get('categorias/{id}/restore', [CategoriaController::class, 'restore'])->name('admin.categorias.restore')->middleware('auth');
+
+//Marcas
+Route::get('/admin/marcas', [MarcaController::class, 'index'])->name('admin.marcas.index')->middleware('auth');
+Route::get('/admin/marcas/create', [MarcaController::class, 'create'])->name('admin.marcas.create')->middleware('auth');
+Route::post('/admin/marcas', [MarcaController::class, 'store'])->name('admin.marcas.store')->middleware('auth');
+Route::get('/admin/marcas/{id}/edit', [MarcaController::class, 'edit'])->name('admin.marcas.edit')->middleware('auth');
+Route::put('/admin/marcas/{id}', [MarcaController::class, 'update'])->name('admin.marcas.update')->middleware('auth');
+Route::delete('/admin/marcas/{id}', [MarcaController::class, 'destroy'])->name('admin.marcas.destroy')->middleware('auth');
+Route::get('marcas/{id}/restore', [MarcaController::class, 'restore'])->name('admin.marcas.restore')->middleware('auth');
+
+
+//Productos
+Route::get('/admin/productos', [ProductoController::class, 'index'])->name('admin.productos.index')->middleware('auth');
+Route::get('/admin/productos/create', [ProductoController::class, 'create'])->name('admin.productos.create')->middleware('auth');
+Route::post('/admin/productos', [ProductoController::class, 'store'])->name('admin.productos.store')->middleware('auth');
+Route::get('/admin/productos/{id}/show', [ProductoController::class, 'show'])->name('admin.productos.show')->middleware('auth');
+Route::get('/admin/productos/{id}/edit', [ProductoController::class, 'edit'])->name('admin.productos.edit')->middleware('auth');
+Route::put('/admin/productos/{id}', [ProductoController::class, 'update'])->name('admin.productos.update')->middleware('auth');
+Route::delete('/admin/productos/{id}', [ProductoController::class, 'destroy'])->name('admin.productos.destroy')->middleware('auth');
+Route::get('productos/restaurar/{id}', [ProductoController::class, 'restaurar'])->name('admin.productos.restaurar')->middleware('auth');
+
+
+

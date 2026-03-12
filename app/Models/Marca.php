@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Categoria extends Model
+class Marca extends Model
 {
     use SoftDeletes;
 
@@ -20,26 +20,24 @@ class Categoria extends Model
 
     protected static function booted()
     {
-        static::deleting(function ($categoria) {
+        static::deleting(function ($marca) {
 
-            // desactivar la categoria
-            $categoria->activo = 0;
-            $categoria->save();
+            $marca->activo = 0;
+            $marca->save();
 
-            foreach ($categoria->productos()->get() as $producto) {
+            foreach ($marca->productos()->get() as $producto) {
                 $producto->activo = 0;
                 $producto->save();
                 $producto->delete();
             }
         });
 
-        static::restoring(function ($categoria) {
+        static::restoring(function ($marca) {
 
-            // activar la categoria
-            $categoria->activo = 1;
-            $categoria->save();
+            $marca->activo = 1;
+            $marca->save();
 
-            foreach ($categoria->productos()->withTrashed()->get() as $producto) {
+            foreach ($marca->productos()->withTrashed()->get() as $producto) {
                 $producto->restore();
                 $producto->activo = 1;
                 $producto->save();

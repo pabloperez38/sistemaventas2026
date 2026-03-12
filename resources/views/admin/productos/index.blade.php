@@ -9,11 +9,11 @@
                     <div class="card-content">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <h4 class="card-title">
-                                Listado de categorías
+                                Listado de productos
                             </h4>
 
-                            <a href="{{ route('admin.categorias.create') }}" class="btn icon icon-left btn-success">
-                                <i class="bi bi-plus-circle"></i> Agregar categoría
+                            <a href="{{ route('admin.productos.create') }}" class="btn icon icon-left btn-success">
+                                <i class="bi bi-plus-circle"></i> Agregar producto
                             </a>
                         </div>
 
@@ -25,40 +25,56 @@
                                         <tr>
 
                                             <th>Nombre</th>
-                                            <th>Estado</th>
+                                            <th>Código</th>
+                                            <th>Categoría</th>
+                                            <th>Marca</th>
+                                            <th>Precio de venta</th>
+                                            <th>Stock</th>
                                             <th class="text-end">Acciones</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @forelse ($categorias as $categoria)
-                                            <tr class="{{ $categoria->trashed() ? 'table-danger' : '' }}">
+                                        @forelse ($productos as $producto)
+                                            <tr class="{{ $producto->trashed() ? 'table-danger' : '' }}">
 
                                                 <td>
-                                                    {{ $categoria->nombre }}
+                                                    {{ $producto->nombre }}
                                                 </td>
                                                 <td>
-                                                    @if ($categoria->activo == 1)
-                                                        <span class="badge bg-success">Activo</span>
-                                                    @else
-                                                        <span class="badge bg-danger">Inactiva</span>
-                                                    @endif
-
+                                                    {{ $producto->codigo }}
                                                 </td>
+
+                                                <td>
+                                                    {{ $producto->categoria->nombre }}
+                                                </td>
+                                                <td>
+                                                    {{ $producto->marca->nombre }}
+                                                </td>
+                                                <td>
+                                                    {{ $producto->precio_venta }}
+                                                </td>
+                                                <td>
+                                                    {{ $producto->stock }}
+                                                </td>
+
 
                                                 <td class="text-end">
-
-                                                    @if ($categoria->trashed())
-                                                        <a href="{{ route('admin.categorias.restore', $categoria->id) }}"
-                                                            class="btn btn-success btn-sm">
-                                                            <i class="bi bi-arrow-counterclockwise"></i> Restaurar
+                                                    @if ($producto->trashed())
+                                                        <a href="{{ route('admin.productos.restaurar', $producto->id) }}"
+                                                            class="btn icon icon-left btn-success btn-sm"> <i
+                                                                class="bi bi-arrow-counterclockwise"></i> Restaurar
                                                         </a>
                                                     @else
-                                                        <a href="{{ route('admin.categorias.edit', $categoria->id) }}"
+                                                        <a href="{{ route('admin.productos.show', $producto->id) }}"
+                                                            class="btn icon icon-left btn-info btn-sm">
+                                                            <i class="bi bi-eye"></i> Ver
+                                                        </a>
+                                                        <a href="{{ route('admin.productos.edit', $producto->id) }}"
                                                             class="btn icon icon-left btn-warning btn-sm">
                                                             <i class="bi bi-pencil"></i> Editar
                                                         </a>
                                                         <form
-                                                            action="{{ route('admin.categorias.destroy', $categoria->id) }}"
+                                                            action="{{ route('admin.productos.destroy', $producto->id) }}"
                                                             method="post" class="d-inline delete-form">
                                                             @csrf
                                                             @method('DELETE')
@@ -74,8 +90,8 @@
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="3" class="text-center text-muted py-4">
-                                                    No hay categorías registradas
+                                                <td colspan="7" class="text-center text-muted py-4">
+                                                    No hay productos registrados
                                                 </td>
                                             </tr>
                                         @endforelse

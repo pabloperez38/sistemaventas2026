@@ -2,14 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Configuracion;
-use Illuminate\Http\Request;
-
+use App\Models\Categoria;
+use App\Models\Marca;
+use App\Models\User;
+use Spatie\Permission\Models\Role;
 
 class AdminController extends Controller
 {
     public function index()
     {
-        return view('admin.index');
+        $total_roles = Role::count();
+        $total_usuarios = User::count();
+        $total_categorias = Categoria::count();
+        $total_marcas = Marca::count();
+        //$total_productos = Producto::count();
+
+        return view('admin.index', compact('total_roles', 'total_usuarios', 'total_categorias', 'total_marcas'));
     }
 }

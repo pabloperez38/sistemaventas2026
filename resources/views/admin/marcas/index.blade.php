@@ -9,11 +9,11 @@
                     <div class="card-content">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <h4 class="card-title">
-                                Listado de categorías
+                                Listado de marcas
                             </h4>
 
-                            <a href="{{ route('admin.categorias.create') }}" class="btn icon icon-left btn-success">
-                                <i class="bi bi-plus-circle"></i> Agregar categoría
+                            <a href="{{ route('admin.marcas.create') }}" class="btn icon icon-left btn-success">
+                                <i class="bi bi-plus-circle"></i> Agregar marca
                             </a>
                         </div>
 
@@ -30,15 +30,15 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @forelse ($categorias as $categoria)
-                                            <tr class="{{ $categoria->trashed() ? 'table-danger' : '' }}">
+                                        @forelse ($marcas as $marca)
+                                              <tr class="{{ $marca->trashed() ? 'table-danger' : '' }}">
 
                                                 <td>
-                                                    {{ $categoria->nombre }}
+                                                    {{ $marca->nombre }}
                                                 </td>
                                                 <td>
-                                                    @if ($categoria->activo == 1)
-                                                        <span class="badge bg-success">Activo</span>
+                                                    @if ($marca->activo == 1)
+                                                        <span class="badge bg-success">Activa</span>
                                                     @else
                                                         <span class="badge bg-danger">Inactiva</span>
                                                     @endif
@@ -46,19 +46,17 @@
                                                 </td>
 
                                                 <td class="text-end">
-
-                                                    @if ($categoria->trashed())
-                                                        <a href="{{ route('admin.categorias.restore', $categoria->id) }}"
+                                                    @if ($marca->trashed())
+                                                        <a href="{{ route('admin.marcas.restore', $marca->id) }}"
                                                             class="btn btn-success btn-sm">
                                                             <i class="bi bi-arrow-counterclockwise"></i> Restaurar
                                                         </a>
                                                     @else
-                                                        <a href="{{ route('admin.categorias.edit', $categoria->id) }}"
+                                                        <a href="{{ route('admin.marcas.edit', $marca->id) }}"
                                                             class="btn icon icon-left btn-warning btn-sm">
                                                             <i class="bi bi-pencil"></i> Editar
                                                         </a>
-                                                        <form
-                                                            action="{{ route('admin.categorias.destroy', $categoria->id) }}"
+                                                        <form action="{{ route('admin.marcas.destroy', $marca->id) }}"
                                                             method="post" class="d-inline delete-form">
                                                             @csrf
                                                             @method('DELETE')
@@ -75,7 +73,7 @@
                                         @empty
                                             <tr>
                                                 <td colspan="3" class="text-center text-muted py-4">
-                                                    No hay categorías registradas
+                                                    No hay marcas registradas
                                                 </td>
                                             </tr>
                                         @endforelse

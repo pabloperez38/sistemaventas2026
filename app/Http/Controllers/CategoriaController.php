@@ -12,7 +12,7 @@ class CategoriaController extends Controller
      */
     public function index()
     {
-        $categorias = Categoria::all();
+        $categorias = Categoria::withTrashed()->get();
         return view('admin.categorias.index', compact('categorias'));
     }
 
@@ -88,8 +88,29 @@ class CategoriaController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Categoria $categoria)
+    public function destroy($id)
     {
-        //
+        $categoria = Categoria::findOrFail($id);
+
+        $categoria->delete();
+
+        return redirect()->route('admin.categorias.index')->with('swal', [
+            'icon' => 'success',
+            'title' => 'Categoría eliminada correctamente',
+            'timer' => 2000
+        ]);
+    }
+
+    public function restore($id)
+    {
+        $categoria = Categoria::withTrashed()->findOrFail($id);
+
+        $categoria->restore();
+
+        return redirect()->route('admin.categorias.index')->with('swal', [
+            'icon' => 'success',
+            'title' => 'Categoría restaurada correctamente',
+            'timer' => 2000
+        ]);
     }
 }
