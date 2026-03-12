@@ -19,6 +19,25 @@
 
                         <div class="card-body">
 
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <form action="{{ url('/admin/productos') }}" method="get">
+                                        <div class="input-group">
+                                            <input type="text" name="buscar" class="form-control"
+                                                placeholder="Buscar..." value="{{ request()->get('buscar') ?? '' }}">
+                                            <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i>
+                                                Buscar
+                                            </button>
+                                            @if (request()->filled('buscar'))
+                                                <a class="btn btn-danger" href="{{ route('admin.productos.index') }}">
+                                                    <i class="bi bi-x-lg"></i> Limpiar
+                                                </a>
+                                            @endif
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
                             <div class="table-responsive shadow-sm rounded">
                                 <table class="table table-hover align-middle mb-0">
                                     <thead class="table-dark">
@@ -98,6 +117,12 @@
                                     </tbody>
                                 </table>
                             </div>
+                            @if ($productos->hasPages())
+                                <div class="mt-3">
+                                    {{ $productos->links('pagination::bootstrap-5') }}
+                                </div>
+                            @endif
+
                         </div>
 
                     </div>

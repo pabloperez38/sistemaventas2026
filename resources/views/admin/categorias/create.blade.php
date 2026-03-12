@@ -24,7 +24,7 @@
                                                 class="form-control @error('nombre') is-invalid @enderror" id="nombre"
                                                 placeholder="Ingrese nombre" name="nombre">
                                             <div class="form-control-icon">
-                                                <i class="bi bi-shield-check"></i>
+                                                <i class="bi bi-tag"></i>
                                             </div>
                                             @error('nombre')
                                                 <div class="invalid-feedback" role="alert">

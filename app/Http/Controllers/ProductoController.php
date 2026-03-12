@@ -12,9 +12,21 @@ class ProductoController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $productos = Producto::withTrashed()->get();
+        $buscar = $request->input('buscar');
+
+        $query = Producto::withTrashed();
+
+        if ($buscar) {
+            $query->where(function ($q) use ($buscar) {
+                $q->where('nombre', 'like', '%' . $buscar . '%')
+                    ->orWhere('codigo', 'like', '%' . $buscar . '%');
+            });
+        }
+
+        $productos = $query->paginate(10);
+
         return view('admin.productos.index', compact('productos'));
     }
 

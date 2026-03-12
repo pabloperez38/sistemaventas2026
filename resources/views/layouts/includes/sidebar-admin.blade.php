@@ -28,12 +28,16 @@
          </li>
          <li class="sidebar-item {{ request()->is('admin/marcas*') ? 'active' : '' }} ">
              <a href="{{ url('/admin/marcas') }}" class='sidebar-link'>
-                 <i class="bi bi-list"></i>
+                 <i class="bi bi-bookmark-star"></i>
                  <span>Marcas</span>
              </a>
          </li>
-
-
+         <li class="sidebar-item {{ request()->is('admin/proveedores*') ? 'active' : '' }} ">
+             <a href="{{ url('/admin/proveedores') }}" class='sidebar-link'>
+                 <i class="bi bi-truck"></i>
+                 <span>Proveedores</span>
+             </a>
+         </li>
          <li class="sidebar-item {{ request()->is('admin/producto*') ? 'active' : '' }} ">
              <a href="{{ url('/admin/productos') }}" class='sidebar-link'>
                  <i class="bi bi-box-seam"></i>
