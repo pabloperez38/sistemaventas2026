@@ -38,6 +38,12 @@
                  <span>Proveedores</span>
              </a>
          </li>
+         <li class="sidebar-item {{ request()->is('admin/compras*') ? 'active' : '' }} ">
+             <a href="{{ url('/admin/compras') }}" class='sidebar-link'>
+                 <i class="bi bi-cart-check"></i>
+                 <span>Compras</span>
+             </a>
+         </li>
          <li class="sidebar-item {{ request()->is('admin/producto*') ? 'active' : '' }} ">
              <a href="{{ url('/admin/productos') }}" class='sidebar-link'>
                  <i class="bi bi-box-seam"></i>

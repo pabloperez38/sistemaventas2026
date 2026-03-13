@@ -31,4 +31,9 @@ class Producto extends Model
     {
         return $this->belongsTo(Marca::class)->withTrashed();
     }
+
+    public function compras()
+    {
+        return $this->hasMany(Compra::class);
+    }
 }
