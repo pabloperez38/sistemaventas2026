@@ -25,40 +25,52 @@
                                         <tr>
 
                                             <th>Fecha</th>
-                                            <th>Producto</th>
                                             <th>Proveedor</th>
-                                            <th>Precio</th>
-                                            <th>Cantidad</th>
+                                            <th>Comprobante</th>
+                                            <th>Importe</th>
+                                            <th>Estado</th>
                                             <th class="text-end">Acciones</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @forelse ($compras as $compra)
                                             <tr>
-                                                <td>{{ $compra->empresa }}</td>
+                                                <td>{{ \Carbon\Carbon::parse($compra->fecha)->format('d/m/Y') }}</td>
                                                 <td>
-                                                    {{ $compra->cuit }}
+                                                    {{ $compra->proveedor->empresa }}
                                                 </td>
-                                                <td>{{ $compra->nombre }}</td>
-                                                <td>{{ $compra->email }}</td>
-                                                <td>{{ $compra->telefono }}</td>
+                                                <td>{{ $compra->comprobante }}</td>
+                                                <td>${{ number_format($compra->precio_final, 2) }}</td>
+
+                                                <td>
+                                                    @if (!$compra->activo)
+                                                        <span class="badge bg-danger">
+                                                            <i class="bi bi-x-circle"></i> Anulada
+                                                        </span>
+                                                    @else
+                                                        <span class="badge bg-success">
+                                                            <i class="bi bi-check-circle"></i> Activa
+                                                        </span>
+                                                    @endif
+                                                </td>
 
                                                 <td class="text-end">
-
-                                                    <a href="{{ route('admin.compras.edit', $compra->id) }}"
-                                                        class="btn icon icon-left btn-warning btn-sm">
-                                                        <i class="bi bi-pencil"></i> Editar
+                                                    <a href="{{ route('admin.compras.show', $compra->id) }}"
+                                                        class="btn btn-info btn-sm">
+                                                        <i class="bi bi-eye"></i> Ver
                                                     </a>
-                                                    <form action="{{ route('admin.compras.destroy', $compra->id) }}"
-                                                        method="post" class="d-inline delete-form">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="btn icon icon-left btn-danger btn-sm"
-                                                            title="Eliminar">
-                                                            <i class="bi bi-trash-fill text-white"></i> Eliminar
-                                                        </button>
-                                                    </form>
+                                                    @if ($compra->activo)
+                                                        <form class="d-inline"
+                                                            action="{{ route('admin.compras.anular', $compra->id) }}"
+                                                            method="POST">
+                                                            @csrf
+                                                            @method('PUT')
 
+                                                            <button class="btn btn-danger btn-sm">
+                                                                <i class="bi bi-x-circle"></i> Anular
+                                                            </button>
+                                                        </form>
+                                                    @endif
                                                 </td>
                                             </tr>
                                         @empty

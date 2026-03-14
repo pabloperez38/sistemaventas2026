@@ -16,6 +16,72 @@
 
                             <div class="row">
                                 <div class="col-md-2">
+                                    <label for="fecha">Fecha de compra(*)</label>
+                                    <div class="form-group has-icon-left mb-3">
+                                        <div class="position-relative">
+                                            <input type="date" value="{{ old('fecha') }}"
+                                                class="form-control  @error('fecha') is-invalid @enderror" id="fecha"
+                                                placeholder="Ingrese fecha" name="fecha">
+                                            <div class="form-control-icon">
+                                                <i class="bi bi-calendar"></i>
+                                            </div>
+                                            @error('fecha')
+                                                <div class="invalid-feedback" role="alert">
+                                                    {{ $message }}
+                                                </div>
+                                            @enderror
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                                <div class="col-md-5">
+                                    <label for="comprobante">Comprobante de compra(*)</label>
+                                    <div class="form-group has-icon-left mb-3">
+                                        <div class="position-relative">
+                                            <input type="text" value="{{ old('comprobante') }}"
+                                                class="form-control @error('comprobante') is-invalid @enderror"
+                                                id="comprobante" placeholder="Ingrese comprobante" name="comprobante">
+                                            <div class="form-control-icon">
+                                                <i class="bi bi-receipt"></i>
+                                            </div>
+                                            @error('comprobante')
+                                                <div class="invalid-feedback" role="alert">
+                                                    {{ $message }}
+                                                </div>
+                                            @enderror
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                                <div class="col-md-5">
+                                    <label for="proveedor_id">Proveedor(*)</label>
+
+                                    <select class="form-select @error('proveedor_id') is-invalid @enderror"
+                                        name="proveedor_id" id="proveedor_id">
+                                        <option value="">Seleccione un proveedor</option>
+
+                                        @foreach ($proveedores as $proveedor)
+                                            <option value="{{ $proveedor->id }}"
+                                                {{ old('proveedor_id') == $proveedor->id ? 'selected' : '' }}>
+                                                {{ $proveedor->empresa }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+
+                                    @error('proveedor_id')
+                                        <div class="invalid-feedback">
+                                            {{ $message }}
+                                        </div>
+                                    @enderror
+
+                                </div>
+
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-2">
                                     <label for="cantidad">Cantidad (*)</label>
                                     <div class="form-group has-icon-left mb-3">
                                         <div class="position-relative">
@@ -38,7 +104,7 @@
                                     <label for="codigo">Código de producto(*)</label>
                                     <div class="form-group has-icon-left mb-3">
                                         <div class="position-relative">
-                                            <input type="text" value="{{ old('codigo') }}"
+                                            <input autocomplete="off" type="text" value="{{ old('codigo') }}"
                                                 class="form-control @error('codigo') is-invalid @enderror" id="codigo"
                                                 placeholder="Ingrese codigo" name="codigo">
                                             <div class="form-control-icon">
@@ -62,7 +128,7 @@
                                     </button>
                                     <div class="modal fade text-left" id="large" tabindex="-1" role="dialog"
                                         aria-labelledby="myModalLabel17" aria-hidden="true">
-                                        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg"
+                                        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl"
                                             role="document">
                                             <div class="modal-content">
                                                 <div class="modal-header">
@@ -76,8 +142,8 @@
                                                 </div>
                                                 <div class="modal-body">
                                                     <div class="table-responsive shadow-sm rounded">
-                                                        <table class="table table-hover align-middle mb-0">
-                                                            <thead class="table-dark">
+                                                        <table class="table" id="table2">
+                                                            <thead>
                                                                 <tr>
 
                                                                     <th>Nombre</th>
@@ -89,8 +155,7 @@
                                                             </thead>
                                                             <tbody>
                                                                 @forelse ($productos as $producto)
-                                                                    <tr
-                                                                        class="{{ $producto->trashed() ? 'table-danger' : '' }}">
+                                                                    <tr>
 
                                                                         <td>
                                                                             {{ $producto->nombre }}
@@ -104,13 +169,14 @@
                                                                         </td>
 
                                                                         <td>
-                                                                            {{ $producto->precio_venta }}
+                                                                            ${{ number_format($producto->precio_compra, 2, ',', '.') }}
                                                                         </td>
 
                                                                         <td class="text-end">
 
                                                                             <button type="button"
-                                                                                class="btn icon icon-left btn-primary btn-sm">
+                                                                                class="btn icon icon-left btn-primary btn-sm seleccionar-btn"
+                                                                                data-id="{{ $producto->codigo }}">
                                                                                 <i class="bi bi-cart-plus"></i>
                                                                             </button>
 
@@ -127,11 +193,7 @@
                                                             </tbody>
                                                         </table>
                                                     </div>
-                                                    @if ($productos->hasPages())
-                                                        <div class="mt-3">
-                                                            {{ $productos->links('pagination::bootstrap-5') }}
-                                                        </div>
-                                                    @endif
+
                                                 </div>
                                                 <div class="modal-footer">
                                                     <button type="button" class="btn btn-light-secondary"
@@ -161,28 +223,74 @@
                                         <th>Nombre</th>
                                         <th>Costo</th>
                                         <th>Total</th>
+                                        <th>Eliminar</th>
                                     </thead>
                                     <tbody id="tabla_compras">
+
                                         @php
                                             $contador = 1;
+                                            $total = 0;
                                         @endphp
+
                                         @foreach ($tmp_compras as $tmp_compra)
-                                            <tr>
+                                            @php
+                                                $subtotal = $tmp_compra->precio_compra * $tmp_compra->cantidad;
+                                                $total += $subtotal;
+                                            @endphp
+
+                                            <tr id="fila_producto_{{ $tmp_compra->producto->id }}">
                                                 <td>{{ $contador }}</td>
                                                 <td>{{ $tmp_compra->producto->codigo }}</td>
-                                                <td>{{ $tmp_compra->cantidad }}</td>
+                                                <td class="cantidad">{{ $tmp_compra->cantidad }}</td>
                                                 <td>{{ $tmp_compra->producto->nombre }}</td>
-                                                <td>{{ $tmp_compra->producto->precio_compra }}</td>
-                                                <td>{{ $tmp_compra->producto->precio_compra * $tmp_compra->cantidad }}
+
+                                                <td>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text">$</span>
+                                                        <input type="text" class="form-control precio"
+                                                            value="{{ number_format($tmp_compra->precio_compra, 2, ',', '.') }}"
+                                                            data-id="{{ $tmp_compra->producto_id }}">
+                                                    </div>
+
+                                                </td>
+                                                <td class="subtotal" data-valor="{{ $subtotal }}">
+                                                    ${{ number_format($subtotal, 2, ',', '.') }}</td>
+                                                <td>
+
+                                                    <button type="button" class="btn btn-danger btn-sm delete-btn"
+                                                        data-id="{{ $tmp_compra->id }}">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+
                                                 </td>
                                             </tr>
+
                                             @php
                                                 $contador++;
                                             @endphp
                                         @endforeach
 
                                     </tbody>
+                                    {{--   <tfoot>
+                                        <tr>
+                                            <td colspan="6" style="text-align:right;">
+                                                <h4>TOTAL</h4>
+                                            </td>
+                                            <td >
+                                                <h3>${{ number_format($total, 2) }}</h3>
+                                            </td>
+                                        </tr>
+                                    </tfoot> --}}
                                 </table>
+
+                                <div class="d-flex justify-content-end mt-3">
+                                    <div class="card p-3 shadow-sm" style="min-width: 300px;">
+                                        <div class="d-flex justify-content-between align-items-center" id="total_compra">
+                                            <h4>Total:</h4>
+                                            <h3>${{ number_format($total, 2) }}</h3>
+                                        </div>
+                                    </div>
+                                </div>
 
                             </div>
 
@@ -213,6 +321,140 @@
 
 @section('js')
     <script>
+        $(document).on('blur', '.precio', function() {
+
+            let input = $(this);
+            let precio = parseFloat(input.val());
+            let id = input.data('id');
+
+            let fila = input.closest('tr');
+
+            let cantidad = parseFloat(fila.find('.cantidad').text());
+
+            let subtotal = precio * cantidad;
+
+            fila.find('.subtotal')
+                .data('valor', subtotal)
+                .text('$' + dinero(subtotal));
+
+            $.ajax({
+                url: "{{ url('/admin/compras/actualizar-precio/') }}",
+                method: "POST",
+                data: {
+                    id: id,
+                    precio: precio,
+                    _token: '{{ csrf_token() }}',
+                },
+                success: function(response) {
+
+                    calcularTotal();
+
+                }
+            });
+
+        });
+
+
+        $(document).on('click', '.delete-btn', function() {
+
+            let id = $(this).data('id');
+
+            if (id) {
+
+                let fila = $(this).closest('tr'); // selecciona la fila del botón clickeado
+
+                $.ajax({
+                    url: "{{ url('/admin/compras/create/tmp/') }}/" + id,
+                    type: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        _method: 'DELETE',
+                    },
+                    success: function(response) {
+
+                        if (response.success) {
+
+                            Swal.fire({
+                                position: 'top-end',
+                                icon: "success",
+                                title: "Producto eliminado",
+                                showConfirmButton: false,
+                                timer: 1200
+                            });
+
+                            // eliminar la fila del DOM directamente
+                            fila.remove();
+
+                            // recalcular total después de eliminar
+                            calcularTotal();
+
+                        } else {
+
+                            Swal.fire({
+                                position: 'top-end',
+                                icon: "error",
+                                title: "Producto no encontrado",
+                                showConfirmButton: false,
+                                timer: 1500
+                            });
+
+                        }
+
+                        // reset de inputs
+                        $('#codigo').val('').focus();
+                        $('#cantidad').val(1);
+
+                    },
+                    error: function(xhr) {
+                        Swal.fire({
+                            position: 'top-end',
+                            icon: "error",
+                            title: "Error al eliminar",
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                    }
+                });
+            }
+
+        });
+
+        /*  $('.seleccionar-btn').click(function() {
+
+             let id_producto = $(this).data('id');
+             $('#codigo').val(id_producto);
+             $('#large').modal('hide');
+             $('#codigo').focus();
+             $('#cantidad').val(1);
+
+         }); */
+
+        function calcularTotal() {
+
+            let total = 0;
+
+            $('#tabla_compras .subtotal').each(function() {
+
+                total += parseFloat($(this).data('valor')) || 0;
+
+            });
+
+            $('#total_compra h3').text('$' +
+                total.toLocaleString('es-AR', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                })
+            );
+
+        }
+
+        function dinero(numero) {
+            return Number(numero).toLocaleString('es-AR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
         $('#codigo').focus();
 
         $('#form_compra').on('keypress', function(e) {
@@ -222,6 +464,7 @@
             }
 
         });
+
         $('#codigo').on('keyup', function(e) {
 
             if (e.which === 13) {
@@ -230,51 +473,116 @@
                 let cantidad = $('#cantidad').val();
 
                 if (codigo.length >= 8) {
-
-                    $.ajax({
-                        url: '{{ route('admin.compras.tmp_compras') }}',
-                        method: 'POST',
-                        data: {
-                            _token: '{{ csrf_token() }}',
-                            codigo: codigo,
-                            cantidad: cantidad
-                        },
-                        success: function(response) {
-
-                            if (response.success) {
-
-                                Swal.fire({
-                                    position: 'top-end',
-                                    icon: "success",
-                                    title: "Producto agregado",
-                                    showConfirmButton: false,
-                                    timer: 1500
-                                });
-
-                                let producto = response.producto;
-                                let contador = $('#tabla_compras tr').length + 1;
-                                let fila = `
-                                    <tr>
-                                        <td>${contador}</td>
-                                        <td>${producto.codigo}</td>
-                                        <td>${response.cantidad}</td>
-                                        <td>${producto.nombre}</td>
-                                        <td>${producto.precio_compra}</td>
-                                        <td>${response.subtotal}</td>
-                                    </tr>
-                                `;
-
-                                $('#tabla_compras').append(fila);
-
-                                $('#codigo').val('');
-                                $('#codigo').focus();
-                            }
-
-                        }
-                    });
+                    agregarProducto(codigo, cantidad);
                 }
+
             }
 
         });
+
+        $(document).on('click', '.seleccionar-btn', function() {
+
+            let codigo = $(this).data('id');
+            let cantidad = $('#cantidad').val();
+
+            agregarProducto(codigo, cantidad);
+
+            $('#large').modal('hide');
+
+        });
+
+        function agregarProducto(codigo, cantidad) {
+
+            $.ajax({
+                url: '{{ route('admin.compras.tmp_compras') }}',
+                method: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    codigo: codigo,
+                    cantidad: cantidad
+                },
+                success: function(response) {
+
+                    if (response.success) {
+
+                        Swal.fire({
+                            position: 'top-end',
+                            icon: "success",
+                            title: "Producto agregado",
+                            showConfirmButton: false,
+                            timer: 1200
+                        });
+
+                        let producto = response.producto;
+
+                        let fila_existente = $('#fila_producto_' + producto.id);
+
+                        if (fila_existente.length > 0) {
+
+                            fila_existente.find('.cantidad').text(response.cantidad);
+
+                            fila_existente.find('.subtotal')
+                                .data('valor', response.subtotal)
+                                .text('$' + dinero(response.subtotal));
+
+                            calcularTotal();
+
+                        } else {
+
+                            let contador = $('#tabla_compras tr').length + 1;
+
+                            let fila = `
+                    <tr id="fila_producto_${producto.id}">
+                        <td>${contador}</td>
+                        <td>${producto.codigo}</td>
+                        <td class="cantidad">${response.cantidad}</td>
+                        <td>${producto.nombre}</td>
+                        <td>
+                            <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="text" class="form-control precio"
+                                value="${dinero(producto.precio_compra)}"
+                                data-id="{{ $producto->id }}">
+                        </div>
+                            
+                            </td>
+                        <td class="subtotal" data-valor="${response.subtotal}">
+                            $${dinero(response.subtotal)}
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-danger btn-sm delete-btn"
+                                data-id="${response.id_compra}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    `;
+
+                            $('#tabla_compras').append(fila);
+
+                            calcularTotal();
+                        }
+
+                        $('#codigo').val('').focus();
+                        $('#cantidad').val(1);
+
+                    } else {
+
+                        Swal.fire({
+                            position: 'top-end',
+                            icon: "error",
+                            title: "Producto no encontrado",
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+
+                        $('#codigo').val('').focus();
+                        $('#cantidad').val(1);
+                    }
+
+                }
+            });
+
+        }
     </script>
 @endsection

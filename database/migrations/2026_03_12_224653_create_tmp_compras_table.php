@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->integer('cantidad');
             $table->foreignId('producto_id')->constrained('productos')->restrictOnDelete();
+            $table->decimal('precio_compra', 10, 2);
             $table->string('session_id');
             $table->timestamps();
         });

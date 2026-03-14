@@ -85,7 +85,9 @@ Route::post('/admin/compras', [CompraController::class, 'store'])->name('admin.c
 Route::get('/admin/compras/{id}', [CompraController::class, 'show'])->name('admin.compras.show')->middleware('auth');
 Route::get('/admin/compras/{id}/edit', [CompraController::class, 'edit'])->name('admin.compras.edit')->middleware('auth');
 Route::put('/admin/compras/{id}', [CompraController::class, 'update'])->name('admin.compras.update')->middleware('auth');
-Route::delete('/admin/compras/{id}', [CompraController::class, 'destroy'])->name('admin.compras.destroy')->middleware('auth');
+Route::put('/admin/compras/{id}/anular', [CompraController::class, 'anular'])->name('admin.compras.anular')->middleware('auth');
 
 //TPM compras
-Route::post('/admin/compras/tmp', [TmpCompraController::class, 'tmp_compras'])->name('admin.compras.tmp_compras')->middleware('auth');
+Route::post('/admin/compras/create/tmp', [TmpCompraController::class, 'tmp_compras'])->name('admin.compras.tmp_compras')->middleware('auth');
+Route::delete('/admin/compras/create/tmp/{id}', [TmpCompraController::class, 'destroy'])->name('admin.compras.tmp_compras.destroy')->middleware('auth');
+Route::post('/admin/compras/actualizar-precio', [TmpCompraController::class, 'actualizarPrecio'])->name('admin.compras.tmp_compras.actualizarPrecio')->middleware('auth');

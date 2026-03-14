@@ -14,8 +14,10 @@ return new class extends Migration
         Schema::create('compras', function (Blueprint $table) {
             $table->id();
             $table->date('fecha');
-            $table->string('comprobante');          
-            $table->decimal('precio_final', 10, 2);         
+            $table->string('comprobante');
+            $table->decimal('precio_final', 10, 2);
+            $table->foreignId('proveedor_id')->constrained('proveedors')->restrictOnDelete();
+            $table->boolean('activo')->default(1);
             $table->timestamps();
         });
     }

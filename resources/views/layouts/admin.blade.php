@@ -19,6 +19,8 @@
     <link rel="stylesheet" href="{{ asset('assets/compiled/css/app.css') }}" />
     <link rel="stylesheet" href="{{ asset('assets/compiled/css/app-dark.css') }}" />
     <link rel="stylesheet" href="{{ asset('assets/compiled/css/iconly.css') }}" />
+
+    <link rel="stylesheet" href="{{ asset('assets/extensions/datatables.net-bs5/css/dataTables.bootstrap5.min.css') }}">
 </head>
 
 <body>
@@ -94,6 +96,10 @@
     <!-- Need: Apexcharts -->
     <script src="{{ asset('assets/extensions/apexcharts/apexcharts.min.js') }}"></script>
     <script src="{{ asset('assets/static/js/pages/dashboard.js') }}"></script>
+
+    <script src="{{ asset('assets/extensions/datatables.net/js/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ asset('assets/extensions/datatables.net-bs5/js/dataTables.bootstrap5.min.js') }}"></script>
+    <script src="{{ asset('assets/static/js/pages/datatables.js') }}"></script>
 
     @if (session('swal'))
         <script>

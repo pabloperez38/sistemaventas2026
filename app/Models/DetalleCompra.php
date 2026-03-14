@@ -6,6 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class DetalleCompra extends Model
 {
+    protected $fillable = [
+        'compra_id',
+        'producto_id',
+        'cantidad',
+        'precio_compra'
+    ];
+
     public function compra()
     {
         return $this->belongsTo(Compra::class);
@@ -14,10 +21,5 @@ class DetalleCompra extends Model
     public function producto()
     {
         return $this->belongsTo(Producto::class);
-    }
-
-    public function proveedor()
-    {
-        return $this->belongsTo(Proveedor::class);
     }
 }

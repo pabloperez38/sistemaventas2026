@@ -15,8 +15,7 @@ return new class extends Migration
             $table->id();
             $table->integer('cantidad');
             $table->decimal('precio_compra', 10, 2);
-            $table->foreignId('producto_id')->constrained('productos')->restrictOnDelete();
-            $table->foreignId('proveedor_id')->constrained('proveedors')->restrictOnDelete();
+            $table->foreignId('producto_id')->constrained('productos')->restrictOnDelete();        
             $table->foreignId('compra_id')->constrained('compras')->restrictOnDelete();
             $table->timestamps();
         });
