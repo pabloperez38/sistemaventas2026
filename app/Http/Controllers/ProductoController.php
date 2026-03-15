@@ -25,20 +25,20 @@ class ProductoController extends Controller
             });
         }
 
-        $productos = $query->paginate(10);
+        $productos = $query
+            ->orderBy('nombre', 'asc')
+            ->paginate(10);
 
         return view('admin.productos.index', compact('productos'));
     }
-
-
 
     /**
      * Show the form for creating a new resource.
      */
     public function create()
     {
-        $categorias = Categoria::all();
-        $marcas = Marca::all();
+        $categorias = Categoria::orderBy('nombre', 'asc')->get();
+        $marcas = Marca::orderBy('nombre', 'asc')->get();
         return view('admin.productos.create', compact('categorias', 'marcas'));
     }
 

@@ -50,6 +50,18 @@
                  <span>Productos</span>
              </a>
          </li>
+         <li class="sidebar-item {{ request()->is('admin/cliente*') ? 'active' : '' }} ">
+             <a href="{{ url('/admin/clientes') }}" class='sidebar-link'>
+                 <i class="bi bi-person-badge"></i>
+                 <span>Clientes</span>
+             </a>
+         </li>
+         <li class="sidebar-item {{ request()->is('admin/venta*') ? 'active' : '' }} ">
+             <a href="{{ url('/admin/ventas') }}" class='sidebar-link'>
+                 <i class="bi bi-currency-dollar"></i>
+                 <span>Ventas</span>
+             </a>
+         </li>
          <li class="sidebar-title">Ajustes</li>
 
          <li class="sidebar-item {{ request()->is('admin/configuracion*') ? 'active' : '' }}">

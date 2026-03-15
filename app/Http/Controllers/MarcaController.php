@@ -12,7 +12,9 @@ class MarcaController extends Controller
      */
     public function index()
     {
-        $marcas = Marca::withTrashed()->get();
+        $marcas = Marca::withTrashed()
+            ->orderBy('nombre', 'asc')
+            ->get();
         return view('admin.marcas.index', compact('marcas'));
     }
 

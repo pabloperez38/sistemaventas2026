@@ -12,7 +12,9 @@ class CategoriaController extends Controller
      */
     public function index()
     {
-        $categorias = Categoria::withTrashed()->get();
+        $categorias = Categoria::withTrashed()
+            ->orderBy('nombre', 'asc')
+            ->get();
         return view('admin.categorias.index', compact('categorias'));
     }
 

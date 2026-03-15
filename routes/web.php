@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CategoriaController;
+use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\CompraController;
 use App\Http\Controllers\ConfiguracionController;
 use App\Http\Controllers\MarcaController;
@@ -9,7 +10,9 @@ use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\ProveedorController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TmpCompraController;
+use App\Http\Controllers\TmpVentaController;
 use App\Http\Controllers\UsuarioController;
+use App\Http\Controllers\VentaController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -83,11 +86,31 @@ Route::get('/admin/compras', [CompraController::class, 'index'])->name('admin.co
 Route::get('/admin/compras/create', [CompraController::class, 'create'])->name('admin.compras.create')->middleware('auth');
 Route::post('/admin/compras', [CompraController::class, 'store'])->name('admin.compras.store')->middleware('auth');
 Route::get('/admin/compras/{id}', [CompraController::class, 'show'])->name('admin.compras.show')->middleware('auth');
-Route::get('/admin/compras/{id}/edit', [CompraController::class, 'edit'])->name('admin.compras.edit')->middleware('auth');
-Route::put('/admin/compras/{id}', [CompraController::class, 'update'])->name('admin.compras.update')->middleware('auth');
 Route::put('/admin/compras/{id}/anular', [CompraController::class, 'anular'])->name('admin.compras.anular')->middleware('auth');
 
 //TPM compras
 Route::post('/admin/compras/create/tmp', [TmpCompraController::class, 'tmp_compras'])->name('admin.compras.tmp_compras')->middleware('auth');
 Route::delete('/admin/compras/create/tmp/{id}', [TmpCompraController::class, 'destroy'])->name('admin.compras.tmp_compras.destroy')->middleware('auth');
 Route::post('/admin/compras/actualizar-precio', [TmpCompraController::class, 'actualizarPrecio'])->name('admin.compras.tmp_compras.actualizarPrecio')->middleware('auth');
+
+//Clientes
+Route::get('/admin/clientes', [ClienteController::class, 'index'])->name('admin.clientes.index')->middleware('auth');
+Route::get('/admin/clientes/create', [ClienteController::class, 'create'])->name('admin.clientes.create')->middleware('auth');
+Route::post('/admin/clientes', [ClienteController::class, 'store'])->name('admin.clientes.store')->middleware('auth');
+Route::get('/admin/clientes/{id}', [ClienteController::class, 'show'])->name('admin.clientes.show')->middleware('auth');
+Route::get('/admin/clientes/{id}/edit', [ClienteController::class, 'edit'])->name('admin.clientes.edit')->middleware('auth');
+Route::put('/admin/clientes/{id}', [ClienteController::class, 'update'])->name('admin.clientes.update')->middleware('auth');
+Route::delete('/admin/clientes/{id}', [ClienteController::class, 'destroy'])->name('admin.clientes.destroy')->middleware('auth');
+Route::get('clientes/restaurar/{id}', [ClienteController::class, 'restaurar'])->name('admin.clientes.restaurar')->middleware('auth');
+
+//Ventas
+Route::get('/admin/ventas', [VentaController::class, 'index'])->name('admin.ventas.index')->middleware('auth');
+Route::get('/admin/ventas/create', [VentaController::class, 'create'])->name('admin.ventas.create')->middleware('auth');
+Route::post('/admin/ventas', [VentaController::class, 'store'])->name('admin.ventas.store')->middleware('auth');
+Route::get('/admin/ventas/{id}', [VentaController::class, 'show'])->name('admin.ventas.show')->middleware('auth');
+Route::put('/admin/ventas/{id}/anular', [VentaController::class, 'anular'])->name('admin.ventas.anular')->middleware('auth');
+
+//TPM ventas
+Route::post('/admin/ventas/create/tmp', [TmpVentaController::class, 'tmp_ventas'])->name('admin.ventas.tmp_ventas')->middleware('auth');
+Route::delete('/admin/ventas/create/tmp/{id}', [TmpVentaController::class, 'destroy'])->name('admin.ventas.tmp_ventas.destroy')->middleware('auth');
+Route::post('/admin/ventas/actualizar-precio', [TmpVentaController::class, 'actualizarPrecio'])->name('admin.ventas.tmp_ventas.actualizarPrecio')->middleware('auth');
