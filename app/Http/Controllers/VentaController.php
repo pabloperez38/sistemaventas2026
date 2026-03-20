@@ -3,12 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cliente;
+use App\Models\Configuracion;
 use App\Models\DetalleVenta;
 use App\Models\Producto;
 use App\Models\TmpVenta;
 use App\Models\Venta;
+use Barryvdh\DomPDF\Facade\PDF;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use NumberFormatter;
 
 class VentaController extends Controller
 {
@@ -120,27 +123,69 @@ class VentaController extends Controller
         return view('admin.ventas.show', compact('venta'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Venta $venta)
+    public function anular($id)
     {
-        //
+        $venta = Venta::with('detalles.producto')->findOrFail($id);
+
+        if ($venta->activo == 0) {
+            return redirect()->route('admin.ventas.index')->with('swal', [
+                'icon' => 'error',
+                'title' => 'La venta ya está anulada.',
+                'timer' => 2000
+            ]);
+        }
+
+        // límite de días
+        if ($venta->created_at->diffInDays(now()) > 7) {
+            return redirect()->route('admin.ventas.index')->with('swal', [
+                'icon' => 'error',
+                'title' => 'No se puede anular una venta con más de 7 días.',
+                'timer' => 2000
+            ]);
+        }
+
+        DB::transaction(function () use ($venta) {
+
+            foreach ($venta->detalles as $detalle) {
+
+                $producto = $detalle->producto;
+
+                if ($producto) {
+                    $producto->increment('stock', $detalle->cantidad);
+                }
+            }
+
+            $venta->update([
+                'activo' => 0
+            ]);
+        });
+
+        return redirect()->route('admin.ventas.index')->with('swal', [
+            'icon' => 'success',
+            'title' => 'Venta anulada correctamente',
+            'timer' => 2000
+        ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Venta $venta)
+    public function pdf($id)
     {
-        //
-    }
+        $configuracion = Configuracion::first();
+        $venta = Venta::with(['cliente', 'detalles.producto'])->findOrFail($id);
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Venta $venta)
-    {
-        //
+        // convertir número a texto
+        $formatter = new NumberFormatter('es', NumberFormatter::SPELLOUT);
+
+        $numero = floor($venta->precio_final);
+        $centavos = round(($venta->precio_final - $numero) * 100);
+
+        $total_letras = ucfirst($formatter->format($numero)) . ' pesos';
+
+        if ($centavos > 0) {
+            $total_letras .= ' con ' . $formatter->format($centavos) . ' centavos';
+        }
+
+        $pdf = PDF::loadView('admin.ventas.pdf', compact('configuracion', 'venta', 'total_letras'));
+
+        return $pdf->stream();
     }
 }

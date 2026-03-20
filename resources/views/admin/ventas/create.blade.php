@@ -38,7 +38,7 @@
                                 <div class="col-md-5">
                                     <label for="cliente_id">Cliente(*)</label>
 
-                                    <select class="form-select @error('cliente_id') is-invalid @enderror" name="cliente_id"
+                                    <select class="form-select choices @error('cliente_id') is-invalid @enderror" name="cliente_id"
                                         id="cliente_id">
 
                                         @foreach ($clientes as $cliente)
@@ -54,6 +54,13 @@
                                             {{ $message }}
                                         </div>
                                     @enderror
+
+                                </div>
+
+                                  <div class="col-md-4 pt-4">                                   
+                                    <a href="{{ route('admin.clientes.create') }}" class="btn btn-success">
+                                        <i class="bi bi-plus-circle"></i>
+                                    </a>
 
                                 </div>
 

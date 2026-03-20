@@ -108,6 +108,7 @@ Route::get('/admin/ventas', [VentaController::class, 'index'])->name('admin.vent
 Route::get('/admin/ventas/create', [VentaController::class, 'create'])->name('admin.ventas.create')->middleware('auth');
 Route::post('/admin/ventas', [VentaController::class, 'store'])->name('admin.ventas.store')->middleware('auth');
 Route::get('/admin/ventas/{id}', [VentaController::class, 'show'])->name('admin.ventas.show')->middleware('auth');
+Route::get('/admin/ventas/pdf/{id}', [VentaController::class, 'pdf'])->name('admin.ventas.pdf')->middleware('auth');
 Route::put('/admin/ventas/{id}/anular', [VentaController::class, 'anular'])->name('admin.ventas.anular')->middleware('auth');
 
 //TPM ventas

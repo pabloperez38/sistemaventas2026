@@ -70,7 +70,8 @@
                                                     {{ $producto->marca->nombre }}
                                                 </td>
                                                 <td>
-                                                    {{ $producto->precio_venta }}
+                                                    <strong>${{ number_format($producto->precio_venta, 2, ',', '.') }}</strong>
+
                                                 </td>
                                                 <td>
                                                     {{ $producto->stock }}

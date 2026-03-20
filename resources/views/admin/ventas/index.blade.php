@@ -25,7 +25,8 @@
                                         <tr>
 
                                             <th>Fecha</th>
-                                            <th>Cliente</th>                                       
+                                            <th>Venta</th>
+                                            <th>Cliente</th>
                                             <th>Importe</th>
                                             <th>Estado</th>
                                             <th class="text-end">Acciones</th>
@@ -36,8 +37,11 @@
                                             <tr>
                                                 <td>{{ \Carbon\Carbon::parse($venta->fecha)->format('d/m/Y') }}</td>
                                                 <td>
+                                                    {{ 'VE-' . str_pad($venta->id, 6, '0', STR_PAD_LEFT) }}
+                                                </td>
+                                                <td>
                                                     {{ $venta->cliente->nombre }}
-                                                </td>                                              
+                                                </td>
                                                 <td>${{ number_format($venta->precio_final, 2) }}</td>
 
                                                 <td>
@@ -47,12 +51,16 @@
                                                         </span>
                                                     @else
                                                         <span class="badge bg-success">
-                                                            <i class="bi bi-check-circle"></i> Activa
+                                                            <i class="bi bi-check-circle"></i> Finalizada
                                                         </span>
                                                     @endif
                                                 </td>
 
                                                 <td class="text-end">
+                                                    <a href="{{ route('admin.ventas.pdf', $venta->id) }}"
+                                                        class="btn btn-secondary btn-sm" target="_blank">
+                                                        <i class="bi bi-printer"></i> Imprimir
+                                                    </a>
                                                     <a href="{{ route('admin.ventas.show', $venta->id) }}"
                                                         class="btn btn-info btn-sm">
                                                         <i class="bi bi-eye"></i> Ver

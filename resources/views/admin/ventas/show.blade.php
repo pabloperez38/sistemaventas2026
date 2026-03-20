@@ -36,14 +36,14 @@
                 <i class="bi bi-exclamation-triangle-fill"></i>
 
                 Esta venta fue <strong>ANULADA</strong>.
-                El stock de los productos ya fue revertido.
+                El stock de los productos ya fue devuelto.
 
             </div>
         @endif
 
         <div class="row">
 
-            {{-- PROVEEDOR --}}
+            {{-- CLIENTE --}}
             <div class="col-md-3">
 
                 <div class="card shadow-sm">
@@ -55,7 +55,7 @@
                         <h6 class="mt-2 text-muted">Cliente</h6>
 
                         <h5>{{ $venta->cliente->nombre }}</h5>
-                     
+
                     </div>
 
                 </div>
@@ -83,7 +83,6 @@
 
             </div>
 
-
             {{-- COMPROBANTE --}}
             <div class="col-md-3">
 
@@ -95,7 +94,7 @@
 
                         <h6 class="mt-2 text-muted">Comprobante</h6>
 
-                        <h5>{{ $venta->comprobante }}</h5>
+                        <h5>{{ 'VE-' . str_pad($venta->id, 6, '0', STR_PAD_LEFT) }}</h5>
 
                     </div>
 
@@ -126,8 +125,6 @@
 
         </div>
 
-
-
         {{-- TABLA DE PRODUCTOS --}}
 
         <div class="card mt-4 shadow-sm">
@@ -142,7 +139,6 @@
                 </h5>
 
             </div>
-
 
             <div class="card-body">
 
@@ -213,8 +209,6 @@
             </div>
 
         </div>
-
-
 
         {{-- TOTAL FINAL ESTILO FACTURA --}}
 
