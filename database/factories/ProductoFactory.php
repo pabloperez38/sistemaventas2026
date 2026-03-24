@@ -21,7 +21,6 @@ class ProductoFactory extends Factory
             'precio_compra' => $precioCompra,
             'precio_venta' => $precioCompra * $this->faker->randomFloat(2, 1.2, 1.8),
             'activo' => $this->faker->boolean(90),
-
             'categoria_id' => Categoria::inRandomOrder()->first()->id,
             'marca_id' => Marca::inRandomOrder()->first()->id,
         ];

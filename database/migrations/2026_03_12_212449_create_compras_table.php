@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('comprobante');
             $table->decimal('precio_final', 10, 2);
             $table->foreignId('proveedor_id')->constrained('proveedors')->restrictOnDelete();
+            $table->foreignId('caja_id')->constrained('cajas')->onDelete('cascade');
             $table->boolean('activo')->default(1);
             $table->timestamps();
         });

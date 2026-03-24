@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Cliente;
 use App\Models\Configuracion;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -25,7 +26,7 @@ class DatabaseSeeder extends Seeder
             CategoriaSeeder::class,
             MarcaSeeder::class,
             RoleSeeder::class
-        ]);    
+        ]);
 
         User::firstOrCreate([
             'name' => 'Pablo Pérez',
@@ -44,8 +45,8 @@ class DatabaseSeeder extends Seeder
             'cuit' => '30-12345678-9',
             'ciudad' => 'Buenos Aires'
         ]);
-
-
+        Cliente::factory()->consumidorFinal()->create();
+        Cliente::factory()->count(10)->create();
         Producto::factory()->count(200)->create();
     }
 }

@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Caja;
 use App\Models\Cliente;
 use App\Models\Configuracion;
 use App\Models\DetalleVenta;
+use App\Models\MovimientoCaja;
 use App\Models\Producto;
 use App\Models\TmpVenta;
 use App\Models\Venta;
@@ -20,8 +22,9 @@ class VentaController extends Controller
      */
     public function index()
     {
+        $caja_abierta = Caja::whereNull('fecha_cierre')->first();
         $ventas = Venta::orderBy('id', 'desc')->get();
-        return view('admin.ventas.index', compact('ventas'));
+        return view('admin.ventas.index', compact('ventas', 'caja_abierta'));
     }
 
     /**
@@ -33,8 +36,17 @@ class VentaController extends Controller
         $clientes = Cliente::all();
         $session_id = session()->getId();
         $tmp_ventas = TmpVenta::where('session_id', $session_id)->get();
+        $caja_abierta = Caja::whereNull('fecha_cierre')->first();
 
-        return view('admin.ventas.create', compact('productos', 'clientes', 'tmp_ventas'));
+        if ($caja_abierta) {
+            return view('admin.ventas.create', compact('productos', 'clientes', 'tmp_ventas'));
+        } else {
+            return redirect()->route('admin.cajas.create')->with('swal', [
+                'icon' => 'error',
+                'title' => 'Para vender debe abrir caja primero.',
+                'timer' => 2000
+            ]);
+        }
     }
 
     /**
@@ -75,13 +87,23 @@ class VentaController extends Controller
                 foreach ($tmp as $item) {
                     $total += $item->producto->precio_venta * $item->cantidad;
                 }
-
+                //Registrar en caja
+                $caja_id = Caja::whereNull('fecha_cierre')->first()->id;
                 // crear venta
                 $venta = Venta::create([
                     'fecha' => $request->fecha,
                     'precio_final' => $total,
                     'cliente_id' => $request->cliente_id,
+                    'caja_id' => $caja_id
                 ]);
+
+                MovimientoCaja::create([
+                    'monto' => $total,
+                    'descripcion' => "Venta de productos",
+                    'tipo' => "ingreso",
+                    'caja_id' => $caja_id
+                ]);
+
                 //dd($venta);
                 // guardar detalle
                 foreach ($tmp as $item) {
@@ -127,6 +149,7 @@ class VentaController extends Controller
     {
         $venta = Venta::with('detalles.producto')->findOrFail($id);
 
+        // 🔴 Ya anulada
         if ($venta->activo == 0) {
             return redirect()->route('admin.ventas.index')->with('swal', [
                 'icon' => 'error',
@@ -135,7 +158,7 @@ class VentaController extends Controller
             ]);
         }
 
-        // límite de días
+        // 🔴 Límite de días
         if ($venta->created_at->diffInDays(now()) > 7) {
             return redirect()->route('admin.ventas.index')->with('swal', [
                 'icon' => 'error',
@@ -146,18 +169,38 @@ class VentaController extends Controller
 
         DB::transaction(function () use ($venta) {
 
+            $total = 0;
+
             foreach ($venta->detalles as $detalle) {
 
                 $producto = $detalle->producto;
 
                 if ($producto) {
+                    // 🔹 devolver stock
                     $producto->increment('stock', $detalle->cantidad);
                 }
+
+                // 🔹 calcular total (ajustá si tu campo es otro)
+                $total += $detalle->cantidad * (float) $detalle->precio_venta;
             }
 
+            // 🔹 anular venta
             $venta->update([
                 'activo' => 0
             ]);
+
+            // 🔹 buscar caja activa
+            $caja = Caja::whereNull('fecha_cierre')->first();
+
+            // 🔹 registrar movimiento en caja (inverso)
+            if ($caja) {
+                MovimientoCaja::create([
+                    'monto' => $total,
+                    'descripcion' => "Anulación de venta #{$venta->id}",
+                    'tipo' => "egreso", // 👈 inverso del ingreso original
+                    'caja_id' => $caja->id
+                ]);
+            }
         });
 
         return redirect()->route('admin.ventas.index')->with('swal', [

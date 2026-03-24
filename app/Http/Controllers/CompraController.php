@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Caja;
 use App\Models\Compra;
 use App\Models\Producto;
 use App\Models\Proveedor;
@@ -9,6 +10,7 @@ use App\Models\TmpCompra;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\DetalleCompra;
+use App\Models\MovimientoCaja;
 
 class CompraController extends Controller
 {
@@ -17,8 +19,9 @@ class CompraController extends Controller
      */
     public function index()
     {
+        $caja_abierta = Caja::whereNull('fecha_cierre')->first();
         $compras = Compra::orderBy('id', 'desc')->get();
-        return view('admin.compras.index', compact('compras'));
+        return view('admin.compras.index', compact('compras', 'caja_abierta'));
     }
 
     /**
@@ -40,7 +43,6 @@ class CompraController extends Controller
     public function store(Request $request)
     {
         //return response()->json($request->all());
-
 
         $request->validate([
             'fecha' => 'required|date',
@@ -75,13 +77,25 @@ class CompraController extends Controller
                     $total += $item->precio_compra * $item->cantidad;
                 }
                 //dd($total);
-                // crear compra
+                // crear compra 
+                //Registrar en caja
+                $caja_id = Caja::whereNull('fecha_cierre')->first()->id;
+
                 $compra = Compra::create([
                     'fecha' => $request->fecha,
                     'comprobante' => $request->comprobante,
                     'precio_final' => $total,
-                    'proveedor_id' => $request->proveedor_id
+                    'proveedor_id' => $request->proveedor_id,
+                    'caja_id' => $caja_id
                 ]);
+
+                MovimientoCaja::create([
+                    'monto' => $total,
+                    'descripcion' => "Compra de productos",
+                    'tipo' => "egreso",
+                    'caja_id' => $caja_id
+                ]);
+
                 //dd($compra);
                 // guardar detalle
                 foreach ($tmp as $item) {
@@ -130,6 +144,7 @@ class CompraController extends Controller
     {
         $compra = Compra::with('detalles.producto')->findOrFail($id);
 
+        // 🔴 Validar si ya está anulada
         if ($compra->activo == 0) {
             return redirect()->route('admin.compras.index')->with('swal', [
                 'icon' => 'error',
@@ -140,21 +155,39 @@ class CompraController extends Controller
 
         DB::transaction(function () use ($compra) {
 
+            $total = 0;
+
             foreach ($compra->detalles as $detalle) {
 
                 $producto = $detalle->producto;
 
-                // restar stock
+                // 🔹 Restar stock
                 $producto->stock -= $detalle->cantidad;
-
                 $producto->save();
+
+                // 🔹 Calcular total correctamente
+                $total += $detalle->cantidad * (float) $detalle->precio_compra;
             }
 
-            // marcar compra como anulada
+            // 🔹 Marcar compra como anulada
             $compra->activo = 0;
             $compra->save();
+
+            // 🔹 Buscar caja activa
+            $caja = Caja::whereNull('fecha_cierre')->first();
+
+            // 🔹 Registrar movimiento en caja (compensación)
+            if ($caja) {
+                MovimientoCaja::create([
+                    'monto' => $total,
+                    'descripcion' => "Anulación de compra #{$compra->id}",
+                    'tipo' => "ingreso", // 👈 compensa el egreso original
+                    'caja_id' => $caja->id
+                ]);
+            }
         });
 
+        // ✅ Mensaje final
         return redirect()->route('admin.compras.index')->with('swal', [
             'icon' => 'success',
             'title' => 'Compra anulada correctamente',

@@ -7,14 +7,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Venta extends Model
 {
-     use HasFactory;
+    use HasFactory;
 
     protected $fillable = [
-        'fecha',     
+        'fecha',
         'precio_final',
         'cliente_id',
-        'activo'
-    ];   
+        'activo',
+        'caja_id'
+    ];
 
     public function detalles()
     {

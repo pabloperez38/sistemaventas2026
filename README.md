@@ -1,52 +1,162 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Sistema de Ventas 2026
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Descripción
 
-## About Laravel
+Sistema de Ventas 2026 es una aplicación web completa para la gestión de ventas, compras, inventario y administración de usuarios, desarrollada con Laravel 12. Este sistema permite gestionar productos, proveedores, clientes, compras y ventas de manera eficiente, con un enfoque en la administración de inventario y control de transacciones.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+La aplicación incluye funcionalidades avanzadas como:
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- Gestión de productos con categorías y marcas
+- Control de inventario con alertas de stock mínimo
+- Módulo de compras a proveedores
+- Módulo de ventas a clientes con generación de recibos en PDF
+- Sistema de roles y permisos basado en Spatie Laravel Permission
+- Panel de administración con estadísticas
+- Interfaz en español
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Características Principales
 
-## Learning Laravel
+### Gestión de Productos
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+- Crear, editar y eliminar productos
+- Organización por categorías y marcas
+- Control de stock y precios de compra/venta
+- Búsqueda y restauración de productos eliminados
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Inventario y Compras
 
-## Laravel Sponsors
+- Gestión de proveedores
+- Sistema de carrito temporal para compras
+- Registro de compras con detalles de productos
+- Actualización automática de inventario
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### Ventas
 
-### Premium Partners
+- Gestión de clientes
+- Carrito temporal para ventas
+- Generación de recibos en PDF
+- Cancelación de ventas
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### Administración
 
-## Contributing
+- Configuración del sistema (empresa, logo, etc.)
+- Gestión de usuarios y roles
+- Panel de control con estadísticas
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Requisitos del Sistema
 
-## Code of Conduct
+- PHP 8.2.12 o superior
+- Composer
+- Node.js y npm
+- MySQL o PostgreSQL
+- Laravel 12
+
+## Instalación
+
+1. Clona el repositorio:
+
+    ```bash
+    git clone https://github.com/tu-usuario/sistemaventas2026.git
+    cd sistemaventas2026
+    ```
+
+2. Instala las dependencias de PHP:
+
+    ```bash
+    composer install
+    ```
+
+3. Instala las dependencias de JavaScript:
+
+    ```bash
+    npm install
+    ```
+
+4. Copia el archivo de configuración y configura tu base de datos:
+
+    ```bash
+    cp .env.example .env
+    ```
+
+    Edita `.env` con tus credenciales de base de datos.
+
+5. Genera la clave de la aplicación:
+
+    ```bash
+    php artisan key:generate
+    ```
+
+6. Ejecuta las migraciones y seeders:
+
+    ```bash
+    php artisan migrate --seed
+    ```
+
+7. Construye los assets:
+
+    ```bash
+    npm run build
+    ```
+
+8. Inicia el servidor:
+
+    ```bash
+    php artisan serve
+    ```
+
+9. Para desarrollo con hot reload:
+    ```bash
+    npm run dev
+    ```
+
+## Uso
+
+1. Accede a la aplicación en `http://localhost:8000`
+2. Inicia sesión con las credenciales por defecto (admin/admin) o crea un usuario administrador
+3. Navega por el panel de administración para gestionar productos, compras, ventas, etc.
+
+## Estructura del Proyecto
+
+- `app/Models/` - Modelos de Eloquent
+- `app/Http/Controllers/` - Controladores
+- `resources/views/` - Vistas Blade
+- `routes/web.php` - Rutas web
+- `database/migrations/` - Migraciones de base de datos
+- `public/` - Assets públicos
+
+## Tecnologías Utilizadas
+
+- **Laravel 12** - Framework PHP
+- **Tailwind CSS 4** - Framework CSS
+- **Bootstrap 5** - Componentes UI adicionales
+- **Vite 7** - Herramienta de construcción frontend
+- **Pest PHP 3** - Framework de testing
+- **Spatie Laravel Permission** - Gestión de permisos
+- **Dompdf** - Generación de PDFs
+
+## Testing
+
+Ejecuta los tests con:
+
+```bash
+php artisan test
+```
+
+## Contribución
+
+1. Fork el proyecto
+2. Crea una rama para tu feature (`git checkout -b feature/nueva-funcionalidad`)
+3. Commit tus cambios (`git commit -am 'Agrega nueva funcionalidad'`)
+4. Push a la rama (`git push origin feature/nueva-funcionalidad`)
+5. Abre un Pull Request
+
+## Licencia
+
+Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
+
+## Soporte
+
+Para soporte o preguntas, por favor abre un issue en el repositorio de GitHub.
 
 In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
 

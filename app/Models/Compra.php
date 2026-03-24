@@ -12,7 +12,8 @@ class Compra extends Model
         'comprobante',
         'precio_final',
         'proveedor_id',
-        'activo'
+        'activo',
+        'caja_id'
     ];
 
     use HasFactory;

@@ -11,13 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('ventas', function (Blueprint $table) {
+        Schema::create('cajas', function (Blueprint $table) {
             $table->id();
-            $table->date('fecha');
-            $table->decimal('precio_final', 10, 2);
-            $table->foreignId('cliente_id')->constrained('clientes')->onDelete('cascade');
-            $table->foreignId('caja_id')->constrained('cajas')->onDelete('cascade');
+            $table->dateTime('fecha_apertura');
+            $table->dateTime('fecha_cierre')->nullable();
             $table->boolean('activo')->default(1);
+            $table->decimal('monto_inicial', 10, 2);
+            $table->decimal('monto_final', 10, 2)->nullable();
+            $table->string('descripcion')->nullable();
             $table->timestamps();
         });
     }
@@ -27,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('ventas');
+        Schema::dropIfExists('cajas');
     }
 };

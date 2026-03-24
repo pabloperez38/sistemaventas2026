@@ -12,9 +12,16 @@
                                 Listado de compras
                             </h4>
 
-                            <a href="{{ route('admin.compras.create') }}" class="btn icon icon-left btn-success">
-                                <i class="bi bi-plus-circle"></i> Agregar compra
-                            </a>
+                            @if ($caja_abierta)
+                                <a href="{{ route('admin.compras.create') }}" class="btn icon icon-left btn-success">
+                                    <i class="bi bi-plus-circle"></i> Agregar compra
+                                </a>
+                            @else
+                                <a href="{{ route('admin.cajas.create') }}" class="btn icon icon-left btn-danger">
+
+                                    <i class="bi bi-plus-circle"></i> Abrir caja
+                                </a>
+                            @endif
                         </div>
 
                         <div class="card-body">

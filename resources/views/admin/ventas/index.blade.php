@@ -12,9 +12,18 @@
                                 Listado de ventas
                             </h4>
 
-                            <a href="{{ route('admin.ventas.create') }}" class="btn icon icon-left btn-success">
-                                <i class="bi bi-plus-circle"></i> Agregar venta
-                            </a>
+                            @if ($caja_abierta)
+                                <a href="{{ route('admin.ventas.create') }}" class="btn icon icon-left btn-success">
+
+                                    <i class="bi bi-plus-circle"></i> Agregar venta
+                                </a>
+                            @else
+                                <a href="{{ route('admin.cajas.create') }}" class="btn icon icon-left btn-danger">
+
+                                    <i class="bi bi-plus-circle"></i> Abrir caja
+                                </a>
+                            @endif
+
                         </div>
 
                         <div class="card-body">

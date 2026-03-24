@@ -8,6 +8,12 @@
                  <span>Inicio</span>
              </a>
          </li>
+         <li class="sidebar-item {{ request()->routeIs('admin.cajas.*') ? 'active' : '' }}">
+             <a href="{{ route('admin.cajas.index') }}" class='sidebar-link'>
+                 <i class="bi bi-cash-stack"></i>
+                 <span>Cajas</span>
+             </a>
+         </li>
          <li class="sidebar-item {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}">
              <a href="{{ route('admin.roles.index') }}" class='sidebar-link'>
                  <i class="bi bi-shield-check"></i>

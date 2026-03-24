@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\CajaController;
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\CompraController;
@@ -60,7 +61,6 @@ Route::put('/admin/marcas/{id}', [MarcaController::class, 'update'])->name('admi
 Route::delete('/admin/marcas/{id}', [MarcaController::class, 'destroy'])->name('admin.marcas.destroy')->middleware('auth');
 Route::get('marcas/{id}/restore', [MarcaController::class, 'restore'])->name('admin.marcas.restore')->middleware('auth');
 
-
 //Productos
 Route::get('/admin/productos', [ProductoController::class, 'index'])->name('admin.productos.index')->middleware('auth');
 Route::get('/admin/productos/create', [ProductoController::class, 'create'])->name('admin.productos.create')->middleware('auth');
@@ -115,3 +115,15 @@ Route::put('/admin/ventas/{id}/anular', [VentaController::class, 'anular'])->nam
 Route::post('/admin/ventas/create/tmp', [TmpVentaController::class, 'tmp_ventas'])->name('admin.ventas.tmp_ventas')->middleware('auth');
 Route::delete('/admin/ventas/create/tmp/{id}', [TmpVentaController::class, 'destroy'])->name('admin.ventas.tmp_ventas.destroy')->middleware('auth');
 Route::post('/admin/ventas/actualizar-precio', [TmpVentaController::class, 'actualizarPrecio'])->name('admin.ventas.tmp_ventas.actualizarPrecio')->middleware('auth');
+
+//Cajas
+Route::get('/admin/cajas', [CajaController::class, 'index'])->name('admin.cajas.index')->middleware('auth');
+Route::get('/admin/cajas/create', [CajaController::class, 'create'])->name('admin.cajas.create')->middleware('auth');
+Route::post('/admin/cajas', [CajaController::class, 'store'])->name('admin.cajas.store')->middleware('auth');
+Route::get('/admin/cajas/{id}', [CajaController::class, 'show'])->name('admin.cajas.show')->middleware('auth');
+Route::get('/admin/cajas/{id}/edit', [CajaController::class, 'edit'])->name('admin.cajas.edit')->middleware('auth');
+Route::put('/admin/cajas/{id}', [CajaController::class, 'update'])->name('admin.cajas.update')->middleware('auth');
+Route::get('/admin/cajas/{id}/ingreso-egreso', [CajaController::class, 'ingresoegreso'])->name('admin.cajas.ingreso-egreso')->middleware('auth');
+Route::post('/admin/cajas/{id}/ingreso-egreso', [CajaController::class, 'store_ingresos_egresos'])->name('admin.cajas.store_ingresos_egresos')->middleware('auth');
+Route::get('/admin/cajas/{id}/cerrar', [CajaController::class, 'cerrar'])->name('admin.cajas.cerrar')->middleware('auth');
+Route::post('/admin/cajas/{id}/cierre', [CajaController::class, 'store_cierre'])->name('admin.cajas.store_cierre')->middleware('auth');
