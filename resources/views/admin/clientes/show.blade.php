@@ -122,7 +122,7 @@
 
 
             {{-- TOTAL GASTADO --}}
-            <div class="col-md-6">
+            <div class="col-md-6 ">
 
                 <div class="card shadow-sm bg-primary text-white">
 
@@ -130,9 +130,9 @@
 
                         <i class="bi bi-cash-stack fs-1"></i>
 
-                        <h6 class="mt-2">Total gastado</h6>
+                        <h6 class="mt-2 text-white"">Total gastado</h6>
 
-                        <h3>
+                        <h3 class="text-white">
 
                             $ {{ number_format($cliente->ventas->sum('precio_final'), 2, ',', '.') }}
 
@@ -173,7 +173,7 @@
 
                             <tr>
                                 <th>#</th>
-                                <th>Fecha</th>                            
+                                <th>Fecha</th>
                                 <th class="text-end">Total</th>
                                 <th class="text-center">Acción</th>
                             </tr>
@@ -189,7 +189,7 @@
 
                                     <td>
                                         {{ \Carbon\Carbon::parse($venta->fecha)->format('d/m/Y') }}
-                                    </td>                                
+                                    </td>
 
                                     <td class="text-end">
 
@@ -199,7 +199,7 @@
 
                                     <td class="text-center">
 
-                                        <a href="{{ route('admin.compras.show', $venta->id) }}"
+                                        <a href="{{ route('admin.ventas.show', $venta->id) }}"
                                             class="btn btn-sm btn-primary">
 
                                             <i class="bi bi-eye"></i>

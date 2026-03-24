@@ -38,6 +38,10 @@
                                                 </td>
 
                                                 <td class="text-end">
+                                                    <a href="{{ route('admin.roles.permisos', $role->id) }}"
+                                                        class="btn icon icon-left btn-primary btn-sm">
+                                                        <i class="bi bi-key"></i> Permisos
+                                                    </a>
                                                     <a href="{{ route('admin.roles.edit', $role->id) }}"
                                                         class="btn icon icon-left btn-warning btn-sm">
                                                         <i class="bi bi-pencil"></i> Editar
@@ -46,8 +50,7 @@
                                                         method="post" class="d-inline delete-form">
                                                         @csrf
                                                         @method('DELETE')
-                                                        <button type="submit"
-                                                            class="btn icon icon-left btn-danger btn-sm"
+                                                        <button type="submit" class="btn icon icon-left btn-danger btn-sm"
                                                             title="Eliminar">
                                                             <i class="bi bi-trash-fill text-white"></i> Eliminar
                                                         </button>

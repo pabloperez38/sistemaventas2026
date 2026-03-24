@@ -14,6 +14,7 @@ use Barryvdh\DomPDF\Facade\PDF;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use NumberFormatter;
+use Illuminate\Support\Facades\Auth;
 
 class VentaController extends Controller
 {
@@ -94,7 +95,8 @@ class VentaController extends Controller
                     'fecha' => $request->fecha,
                     'precio_final' => $total,
                     'cliente_id' => $request->cliente_id,
-                    'caja_id' => $caja_id
+                    'caja_id' => $caja_id,
+                    'user_id' => Auth::id()
                 ]);
 
                 MovimientoCaja::create([

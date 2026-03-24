@@ -32,7 +32,13 @@ class DatabaseSeeder extends Seeder
             'name' => 'Pablo Pérez',
             'email' => 'pablo.eluniversoweb@gmail.com',
             'password' => Hash::make('12345678'),
-        ])->assignRole('Administrador');
+        ])->assignRole('Super Administrador');
+
+        User::firstOrCreate([
+            'name' => 'Pablo Vendedor',
+            'email' => 'pablo.vendedor@gmail.com',
+            'password' => Hash::make('12345678'),
+        ])->assignRole('Vendedor');
 
         Configuracion::firstOrCreate([
             'nombre_empresa' => 'Mi Empresa',

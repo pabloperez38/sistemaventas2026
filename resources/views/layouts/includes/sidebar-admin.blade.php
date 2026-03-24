@@ -91,18 +91,7 @@
                  <i class="bi bi-person-circle"></i>
                  <span>{{ Auth::user()->name }}</span>
              </a>
-             <ul class="submenu">
-
-                 <li class="submenu-item">
-
-                     <a href="account" class="submenu-link">Perfil</a>
-
-                 </li>
-                 <li class="submenu-item">
-
-                     <a href="account" class="submenu-link">Seguridad</a>
-
-                 </li>
+             <ul class="submenu">                
 
                  <li class="submenu-item">
 

@@ -16,6 +16,7 @@ return new class extends Migration
             $table->date('fecha');
             $table->decimal('precio_final', 10, 2);
             $table->foreignId('cliente_id')->constrained('clientes')->onDelete('cascade');
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('caja_id')->constrained('cajas')->onDelete('cascade');
             $table->boolean('activo')->default(1);
             $table->timestamps();

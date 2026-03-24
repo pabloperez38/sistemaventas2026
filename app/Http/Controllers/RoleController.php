@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 class RoleController extends Controller
@@ -12,7 +13,7 @@ class RoleController extends Controller
      */
     public function index()
     {
-        $roles = Role::all();
+        $roles = Role::where('id', '!=', 1)->get();
         return view('admin.roles.index', compact('roles'));
     }
 
@@ -87,6 +88,49 @@ class RoleController extends Controller
         return redirect()->route('admin.roles.index')->with('swal', [
             'icon' => 'success',
             'title' => 'Rol actualizado exitosamente',
+            'timer' => 2000
+        ]);
+    }
+
+    public function permisos($id)
+    {
+        $rol = Role::findOrFail($id);
+        $permisos = Permission::all()->groupBy(function ($permiso) {
+            if (stripos($permiso->name, 'configuración') != false) {
+                return 'Configuración';
+            } elseif (stripos($permiso->name, 'roles') != false) {
+                return 'Roles';
+            } elseif (stripos($permiso->name, 'usuarios') != false) {
+                return 'Usuarios';
+            } elseif (stripos($permiso->name, 'categorías') != false) {
+                return 'Categorías';
+            } elseif (stripos($permiso->name, 'marcas') != false) {
+                return 'Marcas';
+            } elseif (stripos($permiso->name, 'productos') != false) {
+                return 'Productos';
+            } elseif (stripos($permiso->name, 'proveedores') != false) {
+                return 'Proveedores';
+            } elseif (stripos($permiso->name, 'compras') != false) {
+                return 'Compras';
+            } elseif (stripos($permiso->name, 'clientes') != false) {
+                return 'Clientes';
+            } elseif (stripos($permiso->name, 'ventas') != false) {
+                return 'Ventas';
+            } elseif (stripos($permiso->name, 'cajas') != false) {
+                return 'Cajas';
+            }
+        });
+        return view('admin.roles.permisos', compact('rol', 'permisos'));
+    }
+
+    public function update_permisos(Request $request, string $id)
+    {
+        $rol = Role::findOrFail($id);
+        $rol->permissions()->sync($request->permisos);
+
+        return redirect()->route('admin.roles.index')->with('swal', [
+            'icon' => 'success',
+            'title' => 'Permisos actualizados exitosamente',
             'timer' => 2000
         ]);
     }

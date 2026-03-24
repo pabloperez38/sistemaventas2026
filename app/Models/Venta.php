@@ -14,12 +14,17 @@ class Venta extends Model
         'precio_final',
         'cliente_id',
         'activo',
-        'caja_id'
+        'caja_id',
+        'user_id'
     ];
 
     public function detalles()
     {
         return $this->hasMany(DetalleVenta::class);
+    }
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
     public function cliente()
     {

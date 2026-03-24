@@ -80,8 +80,8 @@
                 <div class="card shadow-sm bg-primary text-white">
                     <div class="card-body text-center">
                         <i class="bi bi-wallet2 fs-1"></i>
-                        <h6 class="mt-2">Monto inicial</h6>
-                        <h4>$ {{ number_format($caja->monto_inicial, 2, ',', '.') }}</h4>
+                        <h6 class="mt-2 text-white">Monto inicial</h6>
+                        <h4 class="text-white">$ {{ number_format($caja->monto_inicial, 2, ',', '.') }}</h4>
                     </div>
                 </div>
             </div>
