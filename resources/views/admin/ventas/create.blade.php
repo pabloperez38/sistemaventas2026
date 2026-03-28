@@ -38,8 +38,8 @@
                                 <div class="col-md-5">
                                     <label for="cliente_id">Cliente(*)</label>
 
-                                    <select class="form-select choices @error('cliente_id') is-invalid @enderror" name="cliente_id"
-                                        id="cliente_id">
+                                    <select class="form-select choices @error('cliente_id') is-invalid @enderror"
+                                        name="cliente_id" id="cliente_id">
 
                                         @foreach ($clientes as $cliente)
                                             <option value="{{ $cliente->id }}"
@@ -57,7 +57,7 @@
 
                                 </div>
 
-                                  <div class="col-md-4 pt-4">                                   
+                                <div class="col-md-4 pt-4">
                                     <a href="{{ route('admin.clientes.create') }}" class="btn btn-success">
                                         <i class="bi bi-plus-circle"></i>
                                     </a>
@@ -290,8 +290,88 @@
                                         class="bi bi-arrow-left"></i>
                                     Cancelar</a>
 
-                                <button type="submit" class="btn btn-primary"><i class="bi bi-floppy"></i>
-                                    Guardar</button>
+
+                                <!-- Botón para abrir modal -->
+                                <button type="button" class="btn btn-success" data-bs-toggle="modal"
+                                    data-bs-target="#modalFinalizarVenta">
+                                    Finalizar venta
+                                </button>
+
+                                <!-- Modal Finalizar Venta -->
+                                <div class="modal fade" id="modalFinalizarVenta" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-lg modal-dialog-centered">
+                                        <div class="modal-content">
+                                            <div class="modal-header bg-primary text-white">
+                                                <h5 class="modal-title">Finalizar venta</h5>
+                                                <button type="button" class="btn-close btn-close-white"
+                                                    data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+
+                                                <!-- Total de la venta -->
+                                                <div
+                                                    class="mb-4 p-3 bg-light rounded shadow-sm d-flex justify-content-between align-items-center">
+                                                    <strong>Total de la venta:</strong>
+                                                    <h4 id="span_total" class="text-success m-0">$0.00</h4>
+                                                </div>
+
+                                                <!-- Tabla de pagos -->
+                                                <table class="table table-bordered table-striped" id="tablaPagos">
+                                                    <thead class="table-secondary">
+                                                        <tr>
+                                                            <th>Método</th>
+                                                            <th>Monto</th>
+                                                            <th style="width: 40px;"></th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <!-- Filas de pago se agregan aquí -->
+                                                    </tbody>
+                                                </table>
+
+                                                <div class="d-flex justify-content-end mb-3">
+                                                    <button type="button" class="btn btn-primary"
+                                                        onclick="agregarPago()">
+                                                        + Agregar pago
+                                                    </button>
+                                                </div>
+
+                                                <!-- Resumen de pagos -->
+                                                <div class="row g-3">
+                                                    <div class="col-md-4">
+                                                        <div class="p-2 bg-success text-white rounded shadow-sm">
+                                                            <strong>Total pagado:</strong>
+                                                            <span id="totalPagado" class="float-end">$0.00</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="p-2 bg-warning text-dark rounded shadow-sm">
+                                                            <strong>Faltante:</strong>
+                                                            <span id="faltante" class="float-end">$0.00</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="p-2 bg-info text-white rounded shadow-sm">
+                                                            <strong>Vuelto:</strong>
+                                                            <input type="text" id="vuelto" readonly
+                                                                class="form-control text-end" value="0.00">
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="submit" id="btnConfirmar" class="btn btn-success"
+                                                    disabled>
+                                                    Confirmar venta
+                                                </button>
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                    Cancelar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
 
                             </div>
                         </div>
@@ -569,6 +649,119 @@
                 }
             });
 
+        }
+    </script>
+    <script>
+        let total_venta = 0;
+        let index = 0;
+
+        // 🔹 Función para convertir texto del total en número
+        function parseCurrency(str) {
+            str = str.replace(/\$/g, '').trim();
+            let lastComma = str.lastIndexOf(',');
+            let lastDot = str.lastIndexOf('.');
+            if (lastComma > lastDot) {
+                str = str.replace(/\./g, '').replace(',', '.');
+            } else if (lastDot > lastComma) {
+                str = str.replace(/,/g, '');
+            }
+            return parseFloat(str) || 0;
+        }
+
+        // 🔹 Inicializar modal al abrir
+        document.getElementById('modalFinalizarVenta').addEventListener('shown.bs.modal', function() {
+            const totalH3 = document.querySelector('#total_venta h3');
+            if (totalH3) {
+                total_venta = parseCurrency(totalH3.innerText);
+            }
+
+            // Mostrar total
+            document.getElementById('span_total').innerText =
+                '$' + total_venta.toLocaleString('es-AR', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+
+            // Reset tabla y valores
+            document.querySelector('#tablaPagos tbody').innerHTML = '';
+            document.getElementById('totalPagado').innerText = '$0.00';
+            document.getElementById('faltante').innerText =
+                '$' + total_venta.toLocaleString('es-AR', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            document.getElementById('vuelto').value = '0.00';
+            document.getElementById('btnConfirmar').disabled = true;
+
+            index = 0;
+        });
+
+        // 🔹 Función para calcular pagos y vuelto
+        function calcularPagos() {
+            let totalPagado = 0;
+            let efectivoTotal = 0;
+
+            document.querySelectorAll('#tablaPagos tbody tr').forEach(tr => {
+                let metodo = tr.querySelector('select').value;
+                let monto = parseFloat(tr.querySelector('input').value) || 0;
+                totalPagado += monto;
+                if (metodo === 'efectivo') {
+                    efectivoTotal += monto;
+                }
+            });
+
+            // Faltante
+            let faltante = total_venta - totalPagado;
+
+            // Mostrar valores
+            document.getElementById('totalPagado').innerText =
+                '$' + totalPagado.toLocaleString('es-AR', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            document.getElementById('faltante').innerText =
+                '$' + (faltante > 0 ? faltante.toLocaleString('es-AR', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }) : '0.00');
+
+            // Vuelto: solo si efectivoTotal > faltante
+            let vuelto = efectivoTotal - Math.max(0, total_venta - (totalPagado - efectivoTotal));
+            document.getElementById('vuelto').value =
+                (vuelto > 0 ? vuelto.toLocaleString('es-AR', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }) : '0.00');
+
+            // Habilitar Confirmar
+            document.getElementById('btnConfirmar').disabled = totalPagado < total_venta;
+        }
+
+        // 🔹 Evento de input dinámico
+        document.getElementById('recibido').addEventListener('input', calcularPagos);
+
+        // 🔹 Agregar fila de pago
+        function agregarPago() {
+            let fila = `
+<tr>
+  <td>
+    <select name="pagos[${index}][metodo]" class="form-control">
+      <option value="efectivo">Efectivo</option>
+      <option value="debito">Débito</option>
+      <option value="credito">Crédito</option>
+      <option value="transferencia">Transferencia</option>
+    </select>
+  </td>
+  <td>
+    <input type="number" step="0.01" name="pagos[${index}][monto]" class="form-control monto" oninput="calcularPagos()">
+  </td>
+  <td>
+    <button type="button" class="btn btn-danger btn-sm" onclick="this.closest('tr').remove(); calcularPagos();">❌</button>
+  </td>
+</tr>`;
+            document.querySelector('#tablaPagos tbody').insertAdjacentHTML('beforeend', fila);
+            index++;
+            calcularPagos();
         }
     </script>
 @endsection

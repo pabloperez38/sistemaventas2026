@@ -133,6 +133,7 @@
                                             <th>Tipo</th>
                                             <th>Descripción</th>
                                             <th class="text-end">Monto</th>
+                                            <th>Método</th>
                                             <th class="text-end">Saldo</th>
                                         </tr>
                                     </thead>
@@ -140,13 +141,17 @@
                                     <tbody>
                                         @foreach ($movimientos as $mov)
                                             <tr>
-                                                <td>{{ \Carbon\Carbon::parse($mov['fecha'])->format('d/m/Y H:i') }}</td>
+                                                <td>{{ \Carbon\Carbon::parse($mov['fecha'])->format('d/m/Y H:i') }}
+                                                </td>
 
+                                                {{-- Columna Tipo --}}
                                                 <td>
                                                     @if ($mov['tipo'] == 'apertura')
                                                         <span class="badge bg-primary">Apertura</span>
-                                                    @elseif($mov['tipo'] == 'ingreso')
+                                                    @elseif ($mov['tipo'] == 'ingreso')
                                                         <span class="badge bg-success">Ingreso</span>
+                                                    @elseif($mov['tipo'] == 'pago')
+                                                        <span class="badge bg-info">Pago</span>
                                                     @else
                                                         <span class="badge bg-danger">Egreso</span>
                                                     @endif
@@ -154,22 +159,76 @@
 
                                                 <td>{{ $mov['descripcion'] }}</td>
 
+                                                {{-- Columna Monto --}}
                                                 <td class="text-end">
                                                     @if (in_array($mov['tipo'], ['apertura', 'ingreso']))
                                                         <span class="text-success">+ $
                                                             {{ number_format($mov['monto'], 2) }}</span>
-                                                    @else
+                                                    @elseif ($mov['tipo'] == 'egreso')
                                                         <span class="text-danger">- $
+                                                            {{ number_format($mov['monto'], 2) }}</span>
+                                                    @elseif ($mov['tipo'] == 'pago')
+                                                        <span class="text-primary">$
                                                             {{ number_format($mov['monto'], 2) }}</span>
                                                     @endif
                                                 </td>
+
+                                                {{-- Columna Método --}}
+                                                <td>
+                                                    @php
+                                                        $tipo = ucfirst($mov['tipo']);
+                                                        $metodo = $mov['metodo'] ?? 'Desconocido';
+                                                    @endphp
+
+                                                    @if ($mov['tipo'] == 'apertura')
+                                                        <span class="badge bg-primary">Apertura</span>
+                                                    @else
+                                                        @php
+                                                            // Color según tipo
+                                                            $color = match ($mov['tipo']) {
+                                                                'ingreso' => 'bg-success',
+                                                                'egreso' => 'bg-danger',
+                                                                'pago' => 'bg-info',
+                                                                default => 'bg-secondary',
+                                                            };
+
+                                                            // Ajuste visual método
+                                                            $metodoTexto = match (strtolower($metodo)) {
+                                                                'efectivo' => 'Efectivo',
+                                                                'debito' => 'Débito',
+                                                                'credito' => 'Crédito',
+                                                                'transferencia' => 'Transferencia',
+                                                                'billetera' => 'Billetera',
+                                                                default => 'Desconocido',
+                                                            };
+                                                        @endphp
+
+                                                        <span class="badge {{ $color }}">
+                                                            {{ $tipo }} - {{ $metodoTexto }}
+                                                        </span>
+                                                    @endif
+                                                </td>
+
+                                                {{-- Columna Saldo --}}
                                                 <td class="text-end">
                                                     $ {{ number_format($mov['saldo'], 2) }}
                                                 </td>
                                             </tr>
                                         @endforeach
                                     </tbody>
+
+                                    <tfoot>
+                                        <tr>
+                                            <td colspan="5" class="text-end">
+                                                <h4>Total esperado en caja:</h4>
+                                            </td>
+                                            <td class="text-end">
+                                                <h3>$ {{ number_format($saldoFinal, 2) }}</h3>
+                                            </td>
+                                        </tr>
+                                    </tfoot>
                                 </table>
+
                             </div>
                         </div>
                     </div>

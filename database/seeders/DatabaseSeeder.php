@@ -25,7 +25,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             CategoriaSeeder::class,
             MarcaSeeder::class,
-            RoleSeeder::class
+            RoleSeeder::class,
+            MetodoPagoSeeder::class,
         ]);
 
         User::firstOrCreate([

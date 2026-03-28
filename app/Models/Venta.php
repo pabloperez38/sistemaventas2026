@@ -40,4 +40,8 @@ class Venta extends Model
             ->withPivot('cantidad', 'precio_venta')
             ->withTimestamps();
     }
+    public function pagos()
+    {
+        return $this->hasMany(Pago::class);
+    }
 }

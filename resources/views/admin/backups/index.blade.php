@@ -43,14 +43,14 @@
                                                 <td class="text-end">
                                                     <a href="{{ route('admin.backups.download', ['file' => $backup['name']]) }}"
                                                         class="btn icon icon-left btn-warning btn-sm">
-                                                        <i class="bi bi-pencil"></i> Descargar
+                                                        <i class="bi bi-download"></i> Descargar
                                                     </a>
                                                     <form action="{{ route('admin.backups.destroy', $backup['name']) }}"
                                                         method="POST" style="display:inline;">
                                                         @csrf
                                                         @method('DELETE')
                                                         <button type="submit" class="btn icon icon-left btn-danger btn-sm">
-                                                            <i class="bi bi-lock text-white"></i> Eliminar
+                                                            <i class="bi bi-trash-fill text-white"></i> Eliminar
                                                         </button>
                                                     </form>
                                                 </td>

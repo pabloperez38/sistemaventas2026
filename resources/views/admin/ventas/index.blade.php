@@ -15,7 +15,7 @@
                             @if ($caja_abierta)
                                 <a href="{{ route('admin.ventas.create') }}" class="btn icon icon-left btn-success">
 
-                                    <i class="bi bi-plus-circle"></i> Agregar venta
+                                    <i class="bi bi-plus-circle"></i> Crear venta
                                 </a>
                             @else
                                 <a href="{{ route('admin.cajas.create') }}" class="btn icon icon-left btn-danger">

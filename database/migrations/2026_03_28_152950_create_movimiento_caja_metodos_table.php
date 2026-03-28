@@ -11,15 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('movimiento_cajas', function (Blueprint $table) {
+        Schema::create('movimiento_caja_metodos', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('caja_id')
-                ->constrained('cajas')
-                ->restrictOnDelete();
-            //$table->foreignId('metodo_pago_id')->constrained('metodos_pago')->restrictOnDelete();
-            $table->string('tipo');
-            $table->string('descripcion')->nullable();
+
+            $table->foreignId('movimiento_caja_id')
+                ->constrained()
+                ->cascadeOnDelete();
+
+            $table->foreignId('metodo_pago_id')
+                ->constrained('metodos_pago');
+
             $table->decimal('monto', 10, 2);
+
             $table->timestamps();
         });
     }
@@ -29,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('movimiento_cajas');
+        Schema::dropIfExists('movimiento_caja_metodos');
     }
 };

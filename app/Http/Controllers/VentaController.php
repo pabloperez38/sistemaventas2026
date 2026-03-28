@@ -58,10 +58,10 @@ class VentaController extends Controller
         $request->validate([
             'fecha' => 'required|date',
             'cliente_id' => 'required|exists:clientes,id',
-
+            'pagos' => 'required|array',
+            'pagos.*.metodo' => 'required',
+            'pagos.*.monto' => 'required|numeric|min:0.01',
         ]);
-
-        //dd($request);
 
         $session_id = session()->getId();
 
@@ -88,8 +88,11 @@ class VentaController extends Controller
                 foreach ($tmp as $item) {
                     $total += $item->producto->precio_venta * $item->cantidad;
                 }
+
                 //Registrar en caja
-                $caja_id = Caja::whereNull('fecha_cierre')->first()->id;
+                $caja = Caja::whereNull('fecha_cierre')->first();
+                $caja_id = $caja->id;
+
                 // crear venta
                 $venta = Venta::create([
                     'fecha' => $request->fecha,
@@ -99,14 +102,58 @@ class VentaController extends Controller
                     'user_id' => Auth::id()
                 ]);
 
-                MovimientoCaja::create([
-                    'monto' => $total,
-                    'descripcion' => "Venta de productos",
-                    'tipo' => "ingreso",
-                    'caja_id' => $caja_id
-                ]);
+                // 🔥 MULTIPAGO
+                $totalPagado = 0;
 
-                //dd($venta);
+                if ($request->has('pagos')) {
+
+                    foreach ($request->pagos as $pago) {
+
+                        // guardar pago
+                        $venta->pagos()->create([
+                            'metodo' => $pago['metodo'],
+                            'monto' => $pago['monto'],
+                            'venta_id' => $venta->id
+                        ]);
+
+                        $totalPagado += $pago['monto'];
+
+                        // 👉 SOLO efectivo entra a caja
+                        if ($pago['metodo'] == 'efectivo') {
+                            MovimientoCaja::create([
+                                'monto' => $pago['monto'],
+                                'descripcion' => "Venta #{$venta->id}",
+                                'tipo' => "ingreso",
+                                'caja_id' => $caja_id
+                            ]);
+                        }
+                    }
+                } else {
+                    // 🔥 fallback (tu sistema actual)
+                    $venta->pagos()->create([
+                        'metodo' => $request->metodo,
+                        'monto' => $venta->precio_final,
+                        'venta_id' => $venta->id
+                    ]);
+
+                    if ($request->metodo == 'efectivo') {
+                        MovimientoCaja::create([
+                            'monto' => $total,
+                            'descripcion' => "Venta de productos",
+                            'tipo' => "ingreso",
+                            'caja_id' => $caja_id
+                            
+                        ]);
+                    }
+
+                    $totalPagado = $venta->precio_final;
+                }
+
+                // 🔥 VALIDACIÓN PRO
+                if (round($totalPagado, 2) < round($venta->precio_final, 2)) {
+                    throw new \Exception("El total pagado es menor al total de la venta");
+                }
+
                 // guardar detalle
                 foreach ($tmp as $item) {
 
@@ -119,7 +166,6 @@ class VentaController extends Controller
                     ]);
 
                     $producto = $item->producto;
-
                     $producto->decrement('stock', $item->cantidad);
                 }
 
