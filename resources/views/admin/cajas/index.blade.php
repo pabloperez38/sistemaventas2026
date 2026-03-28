@@ -40,7 +40,7 @@
                                                 <td>{{ $caja->fecha_apertura->format('d/m/Y H:i') }}</td>
                                                 <td>$ {{ number_format($caja->monto_inicial, 2) }}</td>
                                                 <td>{{ optional($caja->fecha_cierre)->format('d/m/Y - H:i') }}</td>
-                                                <td>$ {{ is_null($caja->monto_final) ? '' : number_format($caja->monto_final, 2) }}
+                                                <td>{{ is_null($caja->monto_final) ? '' : '$' . number_format($caja->monto_final, 2) }}
                                                 </td>
                                                 <td class="text-end">
                                                     <a href="{{ route('admin.cajas.ingreso-egreso', $caja->id) }}"

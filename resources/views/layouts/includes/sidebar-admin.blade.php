@@ -77,6 +77,13 @@
              </a>
          </li>
 
+         <li class="sidebar-item {{ request()->routeIs('admin.backups.*') ? 'active' : '' }}">
+             <a href="{{ route('admin.backups.index') }}" class='sidebar-link'>
+                 <i class="bi bi-hdd"></i>
+                 <span>Backups</span>
+             </a>
+         </li>
+
          <li class="sidebar-title">Ajustes</li>
 
          <li class="sidebar-item {{ request()->routeIs('admin.configuracion.*') ? 'active' : '' }}">
@@ -91,7 +98,7 @@
                  <i class="bi bi-person-circle"></i>
                  <span>{{ Auth::user()->name }}</span>
              </a>
-             <ul class="submenu">                
+             <ul class="submenu">
 
                  <li class="submenu-item">
 

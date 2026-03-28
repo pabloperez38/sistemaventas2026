@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\BackupController;
 use App\Http\Controllers\CajaController;
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\ClienteController;
@@ -132,10 +133,16 @@ Route::post('/admin/ventas/actualizar-precio', [TmpVentaController::class, 'actu
 Route::get('/admin/cajas', [CajaController::class, 'index'])->name('admin.cajas.index')->middleware('auth', 'can:Ver Cajas');
 Route::get('/admin/cajas/create', [CajaController::class, 'create'])->name('admin.cajas.create')->middleware('auth', 'can:Formulario Crear Cajas');
 Route::post('/admin/cajas', [CajaController::class, 'store'])->name('admin.cajas.store')->middleware('auth', 'can:Guardar Cajas');
-Route::get('/admin/cajas/{id}', [CajaController::class, 'show'])->name('admin.cajas.show')->middleware('auth', 'can:Ver Detalles Caja');
+Route::get('/admin/cajas/{id}', [CajaController::class, 'show'])->name('admin.cajas.show')->middleware('auth', 'can:Ver Detalles Cajas');
 Route::get('/admin/cajas/{id}/edit', [CajaController::class, 'edit'])->name('admin.cajas.edit')->middleware('auth', 'can:Formulario Editar Cajas');
 Route::put('/admin/cajas/{id}', [CajaController::class, 'update'])->name('admin.cajas.update')->middleware('auth', 'can:Editar Cajas');
 Route::get('/admin/cajas/{id}/ingreso-egreso', [CajaController::class, 'ingresoegreso'])->name('admin.cajas.ingreso-egreso')->middleware('auth', 'can:Formulario Ingreso/Egreso Cajas');
 Route::post('/admin/cajas/{id}/ingreso-egreso', [CajaController::class, 'store_ingresos_egresos'])->name('admin.cajas.store_ingresos_egresos')->middleware('auth', 'can:Guardar Ingreso/Egreso Cajas');
 Route::get('/admin/cajas/{id}/cerrar', [CajaController::class, 'cerrar'])->name('admin.cajas.cerrar')->middleware('auth', 'can:Formulario Cierre Cajas');
 Route::post('/admin/cajas/{id}/cierre', [CajaController::class, 'store_cierre'])->name('admin.cajas.store_cierre')->middleware('auth', 'can:Guardar Cierre Cajas');
+
+//Backups
+Route::get('/admin/backups', [BackupController::class, 'index'])->name('admin.backups.index')->middleware('auth', 'can:Ver Listado de Backups');
+Route::post('/admin/backups/create', [BackupController::class, 'store'])->name('admin.backups.store')->middleware('auth', 'can:Crear Backups');
+Route::get('/admin/backups/{file}/download', [BackupController::class, 'download'])->name('admin.backups.download')->middleware('auth', 'can:Descargar Backups');
+Route::delete('/admin/backups/{file}/delete', [BackupController::class, 'destroy'])->name('admin.backups.destroy')->middleware('auth', 'can:Eliminar Backups');

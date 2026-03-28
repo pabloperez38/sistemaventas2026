@@ -134,11 +134,12 @@ class CajaController extends Controller
             'descripcion' => $request->descripcion
         ]);
 
-        return redirect()->route('admin.cajas.index')->with('swal', [
-            'icon' => 'success',
-            'title' => 'Caja actualizada exitosamente',
-            'timer' => 2000
-        ]);
+        return redirect()->route('admin.cajas.index')
+            ->with('swal', [
+                'icon' => 'success',
+                'title' => 'Caja actualizada exitosamente',
+                'timer' => 2000
+            ]);
     }
 
     public function ingresoegreso($id)

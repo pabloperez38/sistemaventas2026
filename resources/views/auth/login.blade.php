@@ -31,9 +31,7 @@
                             <a href="/login"><img src="{{ asset('storage/' . $configuracion->logo) }}"
                                     alt="{{ $configuracion->nombre_empresa ?? '' }}" /></a>
                         </div>
-                    @endif
-
-                    <h1 class="auth-title">{{ $configuracion->nombre_empresa ?? '' }}</h1>
+                    @endif               
 
                     <p class="auth-subtitle mb-3">
                         Ingreso al sistema
@@ -73,7 +71,7 @@
                                 {{ old('remember') ? 'checked' : '' }}>
 
                             <label class="form-check-label  text-gray-600" for="remember">
-                                Rercordarme
+                                Recordarme
                             </label>
 
                         </div>
@@ -81,12 +79,7 @@
                             Ingresar
                         </button>
                     </form>
-                    <div class="text-center mt-5 text-lg fs-4">
-
-                        <p>
-                            <a class="font-bold" href="auth-forgot-password.html">Forgot password?</a>.
-                        </p>
-                    </div>
+                    
                 </div>
             </div>
             <div class="col-lg-8 d-none d-lg-block">

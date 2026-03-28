@@ -116,7 +116,14 @@ class RoleSeeder extends Seeder
         Permission::create(['name' => 'Editar Cajas'])->syncRoles($superAdmin);
         Permission::create(['name' => 'Formulario Ingreso/Egreso Cajas'])->syncRoles($superAdmin);
         Permission::create(['name' => 'Guardar Ingreso/Egreso Cajas'])->syncRoles($superAdmin);
-        Permission::create(['name' => 'Formulario Cierre Cajas '])->syncRoles($superAdmin);
+        Permission::create(['name' => 'Formulario Cierre Cajas'])->syncRoles($superAdmin);
         Permission::create(['name' => 'Guardar Cierre Cajas'])->syncRoles($superAdmin);
+
+        //Backups
+        Permission::create(['name' => 'Ver Listado de Backups'])->syncRoles($superAdmin);
+        Permission::create(['name' => 'Crear Backups'])->syncRoles($superAdmin);
+        Permission::create(['name' => 'Descargar Backups'])->syncRoles($superAdmin);
+        Permission::create(['name' => 'Eliminar Backups'])->syncRoles($superAdmin);
+
     }
 }
