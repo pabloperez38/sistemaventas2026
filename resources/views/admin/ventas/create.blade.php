@@ -294,7 +294,7 @@
                                 <!-- Botón para abrir modal -->
                                 <button type="button" class="btn btn-success" data-bs-toggle="modal"
                                     data-bs-target="#modalFinalizarVenta">
-                                    Finalizar venta
+                                    <i class="bi bi-receipt"></i> Finalizar venta
                                 </button>
 
                                 <!-- Modal Finalizar Venta -->
@@ -742,6 +742,12 @@
 
         // 🔹 Agregar fila de pago
         function agregarPago() {
+            // Calcular monto restante
+            let totalPagado = Array.from(document.querySelectorAll('#tablaPagos tbody tr'))
+                .reduce((acc, tr) => acc + (parseFloat(tr.querySelector('input').value) || 0), 0);
+
+            let faltante = Math.max(0, total_venta - totalPagado);
+
             let fila = `
 <tr>
   <td>
@@ -753,7 +759,8 @@
     </select>
   </td>
   <td>
-    <input type="number" step="0.01" name="pagos[${index}][monto]" class="form-control monto" oninput="calcularPagos()">
+    <input type="number" step="0.01" name="pagos[${index}][monto]" 
+           class="form-control monto" value="${faltante}" oninput="calcularPagos()">
   </td>
   <td>
     <button type="button" class="btn btn-danger btn-sm" onclick="this.closest('tr').remove(); calcularPagos();">❌</button>

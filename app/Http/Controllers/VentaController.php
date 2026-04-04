@@ -15,6 +15,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use NumberFormatter;
 use Illuminate\Support\Facades\Auth;
+use Mike42\Escpos\Printer;
+use Mike42\Escpos\PrintConnectors\WindowsPrintConnector;
 
 class VentaController extends Controller
 {
@@ -71,16 +73,17 @@ class VentaController extends Controller
 
         // validar que haya al menos un producto
         if ($tmp->count() < 1) {
-            return redirect()->route('admin.compras.index')->with('swal', [
+            return redirect()->route('admin.ventas.index')->with('swal', [
                 'icon' => 'error',
                 'title' => 'Debe agregar al menos un producto a la venta.',
                 'timer' => 2000
             ]);
         }
 
+
         try {
 
-            DB::transaction(function () use ($request, $tmp, $session_id) {
+            $venta = DB::transaction(function () use ($request, $tmp, $session_id) {
 
                 // calcular total desde backend
                 $total = 0;
@@ -142,7 +145,6 @@ class VentaController extends Controller
                             'descripcion' => "Venta de productos",
                             'tipo' => "ingreso",
                             'caja_id' => $caja_id
-                            
                         ]);
                     }
 
@@ -171,7 +173,16 @@ class VentaController extends Controller
 
                 // limpiar carrito temporal
                 TmpVenta::where('session_id', $session_id)->delete();
+
+                return $venta;
             });
+
+            $config = Configuracion::first();
+
+            if ($config && $config->imprimir_ticket) {
+                // dd("ANTES DE IMPRIMIR", $venta->id);
+                $this->ImprimirTicket($venta->id);
+            }
 
             return redirect()->route('admin.ventas.create')->with('swal', [
                 'icon' => 'success',
@@ -278,5 +289,152 @@ class VentaController extends Controller
         $pdf = PDF::loadView('admin.ventas.pdf', compact('configuracion', 'venta', 'total_letras'));
 
         return $pdf->stream();
+    }
+
+    public function ImprimirTicket($id)
+    {
+        try {
+            // Función para alinear a la derecha
+            function rightText($text, $width)
+            {
+                $len = mb_strlen($text, 'UTF-8');
+                if ($len >= $width) return mb_substr($text, 0, $width);
+                return str_repeat(' ', $width - $len) . $text;
+            }
+
+            // Función para alinear a la izquierda
+            function leftText($text, $width)
+            {
+                $len = mb_strlen($text, 'UTF-8');
+                if ($len >= $width) return mb_substr($text, 0, $width);
+                return $text . str_repeat(' ', $width - $len);
+            }
+
+            $venta = Venta::with(['detalles.producto', 'pagos.metodoPago', 'cliente', 'user'])
+                ->findOrFail($id);
+
+            $config = Configuracion::first();
+
+            $connector = new WindowsPrintConnector("POS80");
+            $printer = new Printer($connector);
+
+            $printer->setFont(Printer::FONT_A);
+            $line = str_repeat("-", 48) . "\n";
+
+            // 🏪 ENCABEZADO
+            $printer->setJustification(Printer::JUSTIFY_CENTER);
+            $printer->setEmphasis(true);
+            $printer->setTextSize(2, 2);
+            $printer->text($config->nombre_empresa . "\n");
+            $printer->setTextSize(1, 1);
+            $printer->setEmphasis(false);
+            $printer->text("CUIT: " . $config->cuit . "\n");
+
+            if ($config->direccion) $printer->text($config->direccion . "\n");
+            if ($config->telefono) $printer->text("Tel: " . $config->telefono . "\n");
+
+            $printer->text($line);
+
+            // 🧾 INFO VENTA
+            $printer->setJustification(Printer::JUSTIFY_LEFT);
+            $printer->text("Venta #: " . $venta->id . "\n");
+            $printer->text("Fecha: " . $venta->created_at->format('d/m/Y H:i') . "\n");
+
+            if ($venta->user) {
+                $printer->text("Vendedor: " . $venta->user->name . "\n");
+            }
+
+            if ($venta->cliente) {
+                $printer->text("Cliente: " . $venta->cliente->nombre . "\n");
+            }
+
+            $printer->text($line);
+
+            // 📋 CABECERA DE PRODUCTOS
+            $printer->setEmphasis(true);
+            $printer->text(
+                leftText("Detalle", 36) .
+                    rightText("Subtotal", 12) . "\n"
+            );
+            $printer->setEmphasis(false);
+            $printer->text($line);
+
+            // 🛒 PRODUCTOS
+            foreach ($venta->detalles as $detalle) {
+                $nombre = mb_strimwidth($detalle->producto->nombre ?? 'Producto', 0, 36, "");
+                $cantidad = $detalle->cantidad;
+                $precioUnitario = number_format($detalle->precio_venta, 2, '.', '');
+                $subtotal = number_format($detalle->cantidad * $detalle->precio_venta, 2, '.', '');
+
+                // Nombre del producto
+                $printer->text($nombre . "\n");
+
+                // Cantidad x Precio Unitario (indentado) y Subtotal alineado a la derecha
+                $printer->text(
+                    "  " . $cantidad . " x $" . $precioUnitario .
+                        rightText("$" . $subtotal, 48 - (mb_strlen("  " . $cantidad . " x $" . $precioUnitario))) . "\n"
+                );
+            }
+
+            $printer->text($line);
+
+            // 💰 TOTAL (primero, para que sepa cuánto debe pagar)
+            $total = number_format($venta->precio_final, 2, '.', '');
+            $printer->setEmphasis(true);
+            $printer->text(
+                leftText("TOTAL", 36) .
+                    rightText("$" . $total, 12) . "\n"
+            );
+            $printer->setEmphasis(false);
+            $printer->text($line);
+
+            // 💳 PAGOS (después del total)
+            if ($venta->pagos->count() > 0) {
+                $printer->setEmphasis(true);
+                $printer->text(leftText("Forma de Pago", 36) . rightText("Monto", 12) . "\n");
+                $printer->setEmphasis(false);
+
+                $totalPagado = 0;
+                foreach ($venta->pagos as $pago) {
+                    $metodo = ucfirst($pago->metodo ?? 'Efectivo');
+                    $monto = number_format($pago->monto, 2, '.', '');
+                    $totalPagado += $pago->monto;
+
+                    $printer->text(
+                        leftText($metodo, 36) .
+                            rightText("$" . $monto, 12) . "\n"
+                    );
+                }
+
+                $printer->text($line);
+            } else {
+                $totalPagado = $venta->precio_final;
+            }
+
+            // 💵 VUELTO (si corresponde, después de los pagos)
+            if ($totalPagado > $venta->precio_final) {
+                $cambio = number_format($totalPagado - $venta->precio_final, 2, '.', '');
+                $printer->text(
+                    leftText("VUELTO", 36) .
+                        rightText("$" . $cambio, 12) . "\n"
+                );
+                $printer->text($line);
+            }
+
+            // 🙏 PIE
+            $printer->setJustification(Printer::JUSTIFY_CENTER);
+            $printer->setTextSize(1, 1);
+            $printer->text("¡Gracias por su compra!\n");
+            $printer->text("Vuelva pronto\n");
+            $printer->feed(2);
+
+            // Cortar y cerrar
+            $printer->cut();
+            $printer->close();
+
+            return "Ticket impreso correctamente!";
+        } catch (\Exception $e) {
+            return "ERROR: " . $e->getMessage();
+        }
     }
 }

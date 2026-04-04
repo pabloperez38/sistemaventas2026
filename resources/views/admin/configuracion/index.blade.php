@@ -30,7 +30,8 @@
                                                         <input type="text"
                                                             value="{{ old('nombre_empresa', $configuracion->nombre_empresa ?? '') }}"
                                                             class="form-control @error('nombre_empresa') is-invalid @enderror"
-                                                            id="nombre_empresa" placeholder="Ingrese nombre empresa" name="nombre_empresa">
+                                                            id="nombre_empresa" placeholder="Ingrese nombre empresa"
+                                                            name="nombre_empresa">
                                                         <div class="form-control-icon">
                                                             <i class="bi bi-building"></i>
                                                         </div>
@@ -170,7 +171,7 @@
                                     <div class="col-md-12">
 
                                         <div class="row">
-                                            <div class="col-md-6">
+                                            <div class="col-md-4">
                                                 <div class="form-group">
                                                     <label for="logo">Logo @if (!empty($configuracion->logo))
                                                             (*)
@@ -245,7 +246,7 @@
                                                     }
                                                 </script>
                                             </div>
-                                            <div class="col-md-6">
+                                            <div class="col-md-4">
                                                 <div class="form-group">
                                                     <label for="imagen_login">Imagen de login
                                                         @if (empty($configuracion->imagen_login))
@@ -317,6 +318,19 @@
                                                         reader.readAsDataURL(imagen);
                                                     }
                                                 </script>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label for="imprimir_ticket">Imprimir ticket (necesaria impresora térmica)</label>
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox"
+                                                            id="imprimir_ticket" name="imprimir_ticket"
+                                                            {{ old('imprimir_ticket', $configuracion->imprimir_ticket ?? false) ? 'checked' : '' }}>
+                                                        <label class="form-check-label" for="imprimir_ticket">
+                                                            {{ old('imprimir_ticket', $configuracion->imprimir_ticket ?? false) ? 'Sí' : 'No' }}
+                                                        </label>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
 

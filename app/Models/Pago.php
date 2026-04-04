@@ -12,4 +12,8 @@ class Pago extends Model
     {
         return $this->belongsTo(Venta::class);
     }
+    public function metodoPago()
+    {
+        return $this->belongsTo(MetodoPago::class);
+    }
 }

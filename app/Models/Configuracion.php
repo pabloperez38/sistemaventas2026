@@ -15,6 +15,7 @@ class Configuracion extends Model
         'cuit',
         'cuidad',
         'logo',
-        'imagen_login'
+        'imagen_login',
+        'imprimir_ticket',
     ];
 }

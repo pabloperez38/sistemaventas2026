@@ -10,26 +10,22 @@ class CategoriaSeeder extends Seeder
     public function run(): void
     {
         $categorias = [
-            'Computadoras',
-            'Laptops',
-            'Monitores',
-            'Teclados',
-            'Mouse',
-            'Impresoras',
-            'Almacenamiento',
-            'Memorias RAM',
-            'Placas de Video',
-            'Procesadores',
-            'Motherboards',
-            'Fuentes de Poder',
-            'Gabinetes',
-            'Auriculares',
-            'Parlantes'
+            'Bebidas',
+            'Lácteos',
+            'Almacén',
+            'Snacks',
+            'Congelados',
+            'Limpieza',
+            'Higiene',
+            'Panadería',
+            'Carnicería',
+            'Verdulería',
         ];
 
         foreach ($categorias as $categoria) {
             Categoria::firstOrCreate([
-                'nombre' => $categoria
+                'nombre' => $categoria,
+                'activo' => true // sacalo si no tenés este campo
             ]);
         }
     }

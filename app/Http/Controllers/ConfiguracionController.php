@@ -58,6 +58,8 @@ class ConfiguracionController extends Controller
             $ajuste->imagen_login = $request->file('imagen_login')->store('imagenes_login', 'public');
         }
 
+        $ajuste->imprimir_ticket = $request->has('imprimir_ticket');
+
         $ajuste->save();
 
         return redirect()->route('admin.configuracion.index')->with('swal', [

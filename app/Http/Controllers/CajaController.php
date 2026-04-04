@@ -8,6 +8,7 @@ use App\Models\MovimientoCaja;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
+use function Ramsey\Uuid\v1;
 
 class CajaController extends Controller
 {
@@ -65,7 +66,7 @@ class CajaController extends Controller
 
         $movimientos = collect();
 
-        // 🔥 Totales por método (IGUAL que ingresoegreso)
+        // Totales por método
         $totalesMetodos = [
             'efectivo' => 0,
             'debito' => 0,
@@ -82,38 +83,27 @@ class CajaController extends Controller
             'metodo' => 'Apertura'
         ]);
 
-        // 2️⃣ MOVIMIENTOS (COPIA EXACTA DEL MÉTODO BUENO)
+        // 2️⃣ Movimientos reales de caja
         foreach ($caja->movimientos as $m) {
-            foreach ($m->metodosPago as $mp) {
+            $movimientos->push([
+                'tipo' => $m->tipo,
+                'descripcion' => $m->descripcion,
+                'monto' => $m->monto,
+                'fecha' => $m->created_at,
+                'metodo' => $m->tipo == 'ingreso' ? 'Efectivo' : null,
+            ]);
 
-                $metodo = $mp->metodoPago->codigo ?? null;
-
-                // 👉 tabla de movimientos
-                $movimientos->push([
-                    'tipo' => $m->tipo,
-                    'descripcion' => $m->descripcion,
-                    'monto' => $mp->monto,
-                    'fecha' => $m->created_at,
-                    'metodo' => ucfirst($metodo),
-                ]);
-
-                // 👉 totales por método
-                if (isset($totalesMetodos[$metodo])) {
-                    if ($m->tipo === 'ingreso') {
-                        $totalesMetodos[$metodo] += $mp->monto;
-                    } elseif ($m->tipo === 'egreso') {
-                        $totalesMetodos[$metodo] -= $mp->monto;
-                    }
-                }
+            // ✅ Solo sumar ingresos que comienzan con "Venta"
+            if ($m->tipo == 'ingreso' && str_starts_with($m->descripcion, 'Venta')) {
+                $totalesMetodos['efectivo'] += $m->monto;
+                
             }
         }
 
-        // 3️⃣ VENTAS (igual que ingresoegreso)
+        // 3️⃣ Pagos de ventas (efectivo ya contado)
         foreach ($caja->ventas as $venta) {
             foreach ($venta->pagos as $pago) {
-
-                if ($pago->metodo == 'efectivo') continue;
-
+                if ($pago->metodo == 'efectivo') continue; // ya está contado
                 $movimientos->push([
                     'tipo' => 'pago',
                     'descripcion' => 'Venta #' . $venta->id,
@@ -128,63 +118,38 @@ class CajaController extends Controller
             }
         }
 
-        // 4️⃣ Ordenar
+        // Ordenar por fecha
         $movimientos = $movimientos->sortBy('fecha')->values();
 
-        // 5️⃣ Saldo (igual que ingresoegreso)
+        // Calcular saldo solo efectivo
         $saldo = 0;
         $movimientos = $movimientos->map(function ($mov) use (&$saldo) {
-
-            if ($mov['tipo'] == 'apertura') {
+            if ($mov['tipo'] == 'apertura' || $mov['tipo'] == 'ingreso') {
                 $saldo += $mov['monto'];
-            } elseif ($mov['metodo'] === 'Efectivo') {
-
-                if ($mov['tipo'] === 'ingreso') {
-                    $saldo += $mov['monto'];
-                } elseif ($mov['tipo'] === 'egreso') {
-                    $saldo -= $mov['monto'];
-                }
+            } elseif ($mov['tipo'] == 'egreso') {
+                $saldo -= $mov['monto'];
             }
-
             $mov['saldo'] = $saldo;
             return $mov;
         });
 
         $saldoFinal = $movimientos->last()['saldo'] ?? 0;
 
-        // 🔥 6️⃣ INGRESOS / EGRESOS (DESDE MOVIMIENTOS YA FILTRADOS)
-        $ingresos = 0;
-        $egresos = 0;
-
-        foreach ($movimientos as $mov) {
-            if ($mov['metodo'] === 'Efectivo') {
-
-                if ($mov['tipo'] === 'ingreso') {
-                    $ingresos += $mov['monto'];
-                } elseif ($mov['tipo'] === 'egreso') {
-                    $egresos += $mov['monto'];
-                }
-            }
-        }
-
-        // 🔥 TOTAL REAL DE CAJA
-        $total_esperado = $saldoFinal; // 👈 CLAVE: usar el saldo ya calculado
+        // Totales generales
+        $ingresos = $caja->movimientos->where('tipo', 'ingreso')->sum('monto');
+        $egresos = $caja->movimientos->where('tipo', 'egreso')->sum('monto');
+        $total_esperado = $caja->monto_inicial + $ingresos - $egresos;
         $total_real = $caja->monto_final ?? 0;
         $diferencia = $total_real - $total_esperado;
 
-        // pasar a la vista
+        // Pasar todo a la vista
         $caja->ingresos = $ingresos;
         $caja->egresos = $egresos;
         $caja->total_esperado = $total_esperado;
         $caja->total_real = $total_real;
         $caja->diferencia = $diferencia;
 
-        return view('admin.cajas.show', compact(
-            'caja',
-            'movimientos',
-            'totalesMetodos',
-            'saldoFinal'
-        ));
+        return view('admin.cajas.show', compact('caja', 'movimientos', 'totalesMetodos', 'saldoFinal'));
     }
 
     /**
@@ -252,36 +217,47 @@ class CajaController extends Controller
             'metodo' => 'Apertura'
         ]);
 
-        // 2️⃣ Movimientos reales de caja (solo efectivo)
+        // 2️⃣ Movimientos reales de caja
         foreach ($caja->movimientos as $m) {
-            foreach ($m->metodosPago as $mp) {
 
-                $metodo = $mp->metodoPago->codigo ?? null;
+            // 2a. Movimientos con métodos de pago asociados
+            if ($m->metodosPago && $m->metodosPago->count()) {
+                foreach ($m->metodosPago as $mp) {
+                    $metodo = $mp->metodoPago->codigo ?? null;
 
+                    $movimientos->push([
+                        'tipo' => $m->tipo,
+                        'descripcion' => $m->descripcion,
+                        'monto' => $mp->monto,
+                        'fecha' => $m->created_at,
+                        'metodo' => ucfirst($metodo),
+                    ]);
+
+                    // Totales por método
+                   /*  if (isset($totalesMetodos[$metodo])) {
+                        if ($m->tipo === 'ingreso') {
+                            $totalesMetodos[$metodo] += $mp->monto;
+                        } elseif ($m->tipo === 'egreso') {
+                            $totalesMetodos[$metodo] -= $mp->monto;
+                        }
+                    } */
+                }
+            }
+
+            // 2b. Movimientos manuales de efectivo sin método de pago
+            if ($m->tipo === 'ingreso' && (! $m->metodosPago || $m->metodosPago->isEmpty())) {
                 $movimientos->push([
                     'tipo' => $m->tipo,
                     'descripcion' => $m->descripcion,
-                    'monto' => $mp->monto, // 👈 IMPORTANTE
+                    'monto' => $m->monto,
                     'fecha' => $m->created_at,
-                    'metodo' => ucfirst($metodo),
+                    'metodo' => 'Efectivo', // asumimos que es efectivo manual
                 ]);
-            }
-            $metodo = $mp->metodoPago->codigo ?? null;
 
-            if (isset($totalesMetodos[$metodo])) {
-
-                if ($m->tipo === 'ingreso') {
-                    $totalesMetodos[$metodo] += $mp->monto;
-                } elseif ($m->tipo === 'egreso') {
-                    $totalesMetodos[$metodo] -= $mp->monto;
-                }
-            }
-            // ✅ Solo sumar ingresos que comienzan con "Venta"
-            /* if ($m->tipo == 'ingreso' && str_starts_with($m->descripcion, 'Venta')) {
+                // Sumar al total de efectivo
                 $totalesMetodos['efectivo'] += $m->monto;
-            } */
+            }
         }
-
         // 3️⃣ Pagos de ventas (efectivo ya contado)
         $ventas = $caja->ventas;
         foreach ($ventas as $venta) {
@@ -366,12 +342,7 @@ class CajaController extends Controller
      */
     public function cerrar($id)
     {
-       $caja = Caja::with(
-            'movimientos.metodosPago.metodoPago',
-            'ventas.pagos'
-        )->findOrFail($id);
-
-        //  return $caja;
+        $caja = Caja::with('movimientos', 'ventas.pagos')->findOrFail($id);
 
         $movimientos = collect();
 
@@ -395,32 +366,18 @@ class CajaController extends Controller
 
         // 2️⃣ Movimientos reales de caja (solo efectivo)
         foreach ($caja->movimientos as $m) {
-            foreach ($m->metodosPago as $mp) {
+            $movimientos->push([
+                'tipo' => $m->tipo,
+                'descripcion' => $m->descripcion,
+                'monto' => $m->monto,
+                'fecha' => $m->created_at,
+                'metodo' => $m->tipo == 'ingreso' ? 'Efectivo' : null,
+            ]);
 
-                $metodo = $mp->metodoPago->codigo ?? null;
-
-                $movimientos->push([
-                    'tipo' => $m->tipo,
-                    'descripcion' => $m->descripcion,
-                    'monto' => $mp->monto, // 👈 IMPORTANTE
-                    'fecha' => $m->created_at,
-                    'metodo' => ucfirst($metodo),
-                ]);
-            }
-            $metodo = $mp->metodoPago->codigo ?? null;
-
-            if (isset($totalesMetodos[$metodo])) {
-
-                if ($m->tipo === 'ingreso') {
-                    $totalesMetodos[$metodo] += $mp->monto;
-                } elseif ($m->tipo === 'egreso') {
-                    $totalesMetodos[$metodo] -= $mp->monto;
-                }
-            }
             // ✅ Solo sumar ingresos que comienzan con "Venta"
-            /* if ($m->tipo == 'ingreso' && str_starts_with($m->descripcion, 'Venta')) {
+            if ($m->tipo == 'ingreso' && str_starts_with($m->descripcion, 'Venta')) {
                 $totalesMetodos['efectivo'] += $m->monto;
-            } */
+            }
         }
 
         // 3️⃣ Pagos de ventas (efectivo ya contado)
@@ -434,7 +391,6 @@ class CajaController extends Controller
                     'monto' => $pago->monto,
                     'fecha' => $pago->created_at,
                     'metodo' => ucfirst($pago->metodo),
-
                 ]);
 
                 // Acumular totales por método
@@ -450,23 +406,16 @@ class CajaController extends Controller
         // 5️⃣ Calcular saldo (solo efectivo)
         $saldo = 0;
         $movimientos = $movimientos->map(function ($mov) use (&$saldo) {
-            if ($mov['tipo'] == 'apertura') {
+            if ($mov['tipo'] == 'apertura' || $mov['tipo'] == 'ingreso') {
                 $saldo += $mov['monto'];
-            } elseif ($mov['metodo'] === 'Efectivo') {
-
-                if ($mov['tipo'] === 'ingreso') {
-                    $saldo += $mov['monto'];
-                } elseif ($mov['tipo'] === 'egreso') {
-                    $saldo -= $mov['monto'];
-                }
+            } elseif ($mov['tipo'] == 'egreso') {
+                $saldo -= $mov['monto'];
             }
             $mov['saldo'] = $saldo;
             return $mov;
         });
 
         $saldoFinal = $movimientos->last()['saldo'] ?? 0;
-
-   
         return view('admin.cajas.cierre', compact('caja', 'movimientos', 'saldoFinal', 'totalesMetodos'));
     }
 

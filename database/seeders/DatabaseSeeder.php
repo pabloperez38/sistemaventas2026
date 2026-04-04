@@ -54,6 +54,6 @@ class DatabaseSeeder extends Seeder
         ]);
         Cliente::factory()->consumidorFinal()->create();
         Cliente::factory()->count(10)->create();
-        Producto::factory()->count(200)->create();
+        Producto::factory()->count(200)->create()->unique();
     }
 }

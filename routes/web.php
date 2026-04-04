@@ -146,3 +146,6 @@ Route::get('/admin/backups', [BackupController::class, 'index'])->name('admin.ba
 Route::post('/admin/backups/create', [BackupController::class, 'store'])->name('admin.backups.store')->middleware('auth', 'can:Crear Backups');
 Route::get('/admin/backups/{file}/download', [BackupController::class, 'download'])->name('admin.backups.download')->middleware('auth', 'can:Descargar Backups');
 Route::delete('/admin/backups/{file}/delete', [BackupController::class, 'destroy'])->name('admin.backups.destroy')->middleware('auth', 'can:Eliminar Backups');
+
+//Tiketera
+Route::get('/admin/test-ticket', [VentaController::class, 'testTicket'])->name('admin.test-ticket')->middleware('auth');

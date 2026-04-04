@@ -60,43 +60,55 @@
         <div class="row mb-4">
             <div class="col-md-2">
                 <div class="card shadow-sm bg-primary text-white text-center p-3">
-                    <i class="bi bi-wallet2 fs-1"></i>
+                    <div>
+                        <i class="bi bi-wallet2 fs-1"></i>
+                    </div>
                     <h6 class="mt-2 text-white">Monto inicial</h6>
                     <h5 class="text-white">$ {{ number_format($caja->monto_inicial, 2, ',', '.') }}</h5>
                 </div>
             </div>
             <div class="col-md-2">
                 <div class="card shadow-sm border-success text-center p-3">
-                    <i class="bi bi-arrow-down-circle fs-1 text-success"></i>
-                    <h6 class="text-muted mt-2">Ingresos</h6>
+                    <div>
+                        <i class="bi bi-arrow-down-circle fs-1 text-success"></i>
+                    </div>
+                    <h6 class="text-muted mt-2">Ingresos en efectivo</h6>
                     <h5>$ {{ number_format($caja->ingresos, 2, ',', '.') }}</h5>
                 </div>
             </div>
             <div class="col-md-2">
                 <div class="card shadow-sm border-danger text-center p-3">
-                    <i class="bi bi-arrow-up-circle fs-1 text-danger"></i>
+                    <div>
+                        <i class="bi bi-arrow-up-circle fs-1 text-danger"></i>
+                    </div>
                     <h6 class="text-muted mt-2">Egresos</h6>
                     <h5>$ {{ number_format($caja->egresos, 2, ',', '.') }}</h5>
                 </div>
             </div>
             <div class="col-md-2">
                 <div class="card shadow-sm border-info text-center p-3">
-                    <i class="bi bi-calculator fs-1 text-info"></i>
+                    <div>
+                        <i class="bi bi-calculator fs-1 text-info"></i>
+                    </div>
                     <h6 class="text-muted mt-2">Total esperado</h6>
                     <h5>$ {{ number_format($caja->total_esperado, 2, ',', '.') }}</h5>
                 </div>
             </div>
             <div class="col-md-2">
                 <div class="card shadow-sm border-dark text-center p-3">
-                    <i class="bi bi-cash fs-1 text-dark"></i>
+                    <div>
+                        <i class="bi bi-cash fs-1 text-dark"></i>
+                    </div>
                     <h6 class="text-muted mt-2">Total real</h6>
                     <h5>$ {{ number_format($caja->total_real, 2, ',', '.') }}</h5>
                 </div>
             </div>
             <div class="col-md-2">
                 <div
-                    class="card shadow-sm text-center p-3 {{ $caja->diferencia == 0 ? 'border-success' : 'border-danger' }}">
-                    <i class="bi fs-1 {{ $caja->diferencia == 0 ? 'text-success' : 'text-danger' }}"></i>
+                    class="card shadow-sm text-center p-3 {{ $caja->diferencia >= 0 ? 'border-success' : 'border-danger' }}">
+                    <div>
+                        <i class="bi bi-cash-stack fs-1 {{ $caja->diferencia >= 0 ? 'text-success' : 'text-danger' }}"></i>
+                    </div>
                     <h6 class="text-muted mt-2">Diferencia</h6>
                     <h5>$ {{ number_format($caja->diferencia, 2, ',', '.') }}</h5>
                 </div>
@@ -128,6 +140,23 @@
                     </div>
                 </div>
             @endforeach
+        </div>
+
+        {{-- TOTAL GENERAL DE VENTAS --}}
+        @php
+            $totalVentas = array_sum($totalesMetodos);
+        @endphp
+
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card shadow-lg border-primary text-center p-4">
+                    <div>
+                        <i class="bi bi-bar-chart-line fs-1 text-primary"></i>
+                    </div>
+                    <h5 class="mt-2 text-primary">Total general de ventas</h5>
+                    <h3 class="fw-bold">$ {{ number_format($totalVentas, 2, ',', '.') }}</h3>
+                </div>
+            </div>
         </div>
 
         {{-- OBSERVACIÓN --}}

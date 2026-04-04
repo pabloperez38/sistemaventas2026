@@ -268,23 +268,25 @@
                                                 <td>
                                                     @php
                                                         $tipo = ucfirst($mov['tipo']);
-                                                        $metodo = $mov['metodo'] ?? 'Desconocido';
-                                                    @endphp
+                                                        $metodo = strtolower($mov['metodo'] ?? 'desconocido');
 
-                                                    @if ($mov['tipo'] == 'apertura')
-                                                        <span class="badge bg-primary">Apertura</span>
-                                                    @else
-                                                        @php
-                                                            // Color según tipo
-                                                            $color = match ($mov['tipo']) {
-                                                                'ingreso' => 'bg-success',
-                                                                'egreso' => 'bg-danger',
-                                                                'pago' => 'bg-info',
+                                                        if ($mov['tipo'] == 'apertura') {
+                                                            $color = 'bg-primary';
+                                                            $metodoTexto = 'Apertura';
+                                                        } elseif ($mov['tipo'] == 'egreso') {
+                                                            $color = 'bg-danger';
+                                                            $metodoTexto = ucfirst($metodo);
+                                                        } else {
+                                                            // Colores según método de pago
+                                                            $color = match ($metodo) {
+                                                                'efectivo' => 'bg-success',
+                                                                'debito' => 'bg-info',
+                                                                'credito' => 'bg-warning text-dark',
+                                                                'transferencia' => 'bg-primary',
+                                                                'billetera' => 'bg-secondary',
                                                                 default => 'bg-secondary',
                                                             };
-
-                                                            // Ajuste visual método
-                                                            $metodoTexto = match (strtolower($metodo)) {
+                                                            $metodoTexto = match ($metodo) {
                                                                 'efectivo' => 'Efectivo',
                                                                 'debito' => 'Débito',
                                                                 'credito' => 'Crédito',
@@ -292,12 +294,12 @@
                                                                 'billetera' => 'Billetera',
                                                                 default => 'Desconocido',
                                                             };
-                                                        @endphp
+                                                        }
+                                                    @endphp
 
-                                                        <span class="badge {{ $color }}">
-                                                            {{ $tipo }} - {{ $metodoTexto }}
-                                                        </span>
-                                                    @endif
+                                                    <span class="badge {{ $color }}">
+                                                        {{ $tipo }} - {{ $metodoTexto }}
+                                                    </span>
                                                 </td>
 
                                                 {{-- Columna Saldo --}}

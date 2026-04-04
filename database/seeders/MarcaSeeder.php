@@ -10,30 +10,33 @@ class MarcaSeeder extends Seeder
     public function run(): void
     {
         $marcas = [
-            'Logitech',
-            'HP',
-            'Dell',
-            'Lenovo',
-            'Asus',
-            'Acer',
-            'Samsung',
-            'Kingston',
-            'Corsair',
-            'MSI',
-            'Gigabyte',
-            'Razer',
-            'Redragon',
-            'Intel',
-            'AMD',
-            'Seagate',
-            'Western Digital',
-            'HyperX'
+            'Coca-Cola',
+            'Pepsi',
+            'Arcor',
+            'La Serenísima',
+            'Sancor',
+            'Molinos',
+            'Lucchetti',
+            'Gallo',
+            'Terrabusi',
+            'Bagley',
+            'Quilmes',
+            'Brahma',
+            'Manaos',
+            'Ser',
+            'Ilolay',
+            'La Paulina',
+            'Natura',
+            'Hellmann\'s',
+            'Knorr',
+            'Maggi'
         ];
 
         foreach ($marcas as $marca) {
-            Marca::firstOrCreate([
-                'nombre' => $marca
-            ]);
+            Marca::updateOrCreate(
+                ['nombre' => $marca],
+                ['activo' => true] // sacalo si no tenés este campo
+            );
         }
     }
 }

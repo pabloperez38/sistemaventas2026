@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('descripcion');
             $table->string('cuit')->unique();
             $table->string('ciudad');
+            $table->boolean('imprimir_ticket')->default(true);
             $table->timestamps();
         });
     }
