@@ -6,10 +6,13 @@ use App\Models\Caja;
 use App\Models\Cliente;
 use App\Models\Configuracion;
 use App\Models\DetalleVenta;
+use App\Models\MetodoPago;
 use App\Models\MovimientoCaja;
+use App\Models\MovimientoCajaMetodo;
 use App\Models\Producto;
 use App\Models\TmpVenta;
 use App\Models\Venta;
+use Illuminate\Support\Str;
 use Barryvdh\DomPDF\Facade\PDF;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -27,6 +30,7 @@ class VentaController extends Controller
     {
         $caja_abierta = Caja::whereNull('fecha_cierre')->first();
         $ventas = Venta::orderBy('id', 'desc')->get();
+
         return view('admin.ventas.index', compact('ventas', 'caja_abierta'));
     }
 
@@ -40,9 +44,9 @@ class VentaController extends Controller
         $session_id = session()->getId();
         $tmp_ventas = TmpVenta::where('session_id', $session_id)->get();
         $caja_abierta = Caja::whereNull('fecha_cierre')->first();
-
+        $metodosPago = MetodoPago::all();
         if ($caja_abierta) {
-            return view('admin.ventas.create', compact('productos', 'clientes', 'tmp_ventas'));
+            return view('admin.ventas.create', compact('productos', 'clientes', 'tmp_ventas', 'metodosPago'));
         } else {
             return redirect()->route('admin.cajas.create')->with('swal', [
                 'icon' => 'error',
@@ -71,7 +75,6 @@ class VentaController extends Controller
             ->where('session_id', $session_id)
             ->get();
 
-        // validar que haya al menos un producto
         if ($tmp->count() < 1) {
             return redirect()->route('admin.ventas.index')->with('swal', [
                 'icon' => 'error',
@@ -80,83 +83,75 @@ class VentaController extends Controller
             ]);
         }
 
-
         try {
 
             $venta = DB::transaction(function () use ($request, $tmp, $session_id) {
 
-                // calcular total desde backend
+                // 🔹 TOTAL
                 $total = 0;
-
                 foreach ($tmp as $item) {
                     $total += $item->producto->precio_venta * $item->cantidad;
                 }
 
-                //Registrar en caja
-                $caja = Caja::whereNull('fecha_cierre')->first();
-                $caja_id = $caja->id;
+                // 🔹 CAJA
+                $caja = Caja::whereNull('fecha_cierre')->firstOrFail();
 
-                // crear venta
+                // 🔹 CREAR VENTA
                 $venta = Venta::create([
                     'fecha' => $request->fecha,
                     'precio_final' => $total,
                     'cliente_id' => $request->cliente_id,
-                    'caja_id' => $caja_id,
+                    'caja_id' => $caja->id,
                     'user_id' => Auth::id()
                 ]);
 
-                // 🔥 MULTIPAGO
-                $totalPagado = 0;
+                // 🔥 PAGOS
+                $pagos = $request->input('pagos', []);
+                $restante = $venta->precio_final;
+                $totalPagadoInput = 0;
 
-                if ($request->has('pagos')) {
+                foreach ($pagos as $pago) {
 
-                    foreach ($request->pagos as $pago) {
+                    $metodo = MetodoPago::find($pago['metodo']);
+                    if (!$metodo) continue;
 
-                        // guardar pago
-                        $venta->pagos()->create([
-                            'metodo' => $pago['metodo'],
-                            'monto' => $pago['monto'],
-                            'venta_id' => $venta->id
-                        ]);
+                    $montoInput = (float) $pago['monto'];
+                    $totalPagadoInput += $montoInput;
 
-                        $totalPagado += $pago['monto'];
+                    // evitar guardar vuelto
+                    $montoUsado = min($montoInput, $restante);
+                    if ($montoUsado <= 0) continue;
 
-                        // 👉 SOLO efectivo entra a caja
-                        if ($pago['metodo'] == 'efectivo') {
-                            MovimientoCaja::create([
-                                'monto' => $pago['monto'],
-                                'descripcion' => "Venta #{$venta->id}",
-                                'tipo' => "ingreso",
-                                'caja_id' => $caja_id
-                            ]);
-                        }
-                    }
-                } else {
-                    // 🔥 fallback (tu sistema actual)
+                    // ✅ guardar pago
                     $venta->pagos()->create([
-                        'metodo' => $request->metodo,
-                        'monto' => $venta->precio_final,
-                        'venta_id' => $venta->id
+                        'metodo_pago_id' => $metodo->id,
+                        'monto' => $montoUsado,
                     ]);
 
-                    if ($request->metodo == 'efectivo') {
-                        MovimientoCaja::create([
-                            'monto' => $total,
-                            'descripcion' => "Venta de productos",
-                            'tipo' => "ingreso",
-                            'caja_id' => $caja_id
-                        ]);
-                    }
+                    // 🔥 SI ES EFECTIVO → ENTRA A CAJA
+                    //  if (strtolower($metodo->tipo) === 'efectivo') {
+                    // MovimientoCaja::create([
+                    //     'monto' => $montoUsado,
+                    //     'descripcion' => "Venta #{$venta->id}",
+                    //     'tipo' => "ingreso",
+                    //     'caja_id' => $caja->id,
+                    //     'metodo_pago_id' => $metodo->id
+                    // ]);
+                    //  }
 
-                    $totalPagado = $venta->precio_final;
+                    $restante -= $montoUsado;
                 }
 
-                // 🔥 VALIDACIÓN PRO
-                if (round($totalPagado, 2) < round($venta->precio_final, 2)) {
+                // 🔴 VALIDACIÓN
+                if (round($restante, 2) > 0) {
                     throw new \Exception("El total pagado es menor al total de la venta");
                 }
 
-                // guardar detalle
+                // 💰 VUELTO
+                $vuelto = max(0, $totalPagadoInput - $venta->precio_final);
+                $venta->vuelto = $vuelto;
+
+                // 🔹 DETALLE + STOCK
                 foreach ($tmp as $item) {
 
                     DetalleVenta::create([
@@ -167,11 +162,10 @@ class VentaController extends Controller
                         'precio_venta' => $item->producto->precio_venta
                     ]);
 
-                    $producto = $item->producto;
-                    $producto->decrement('stock', $item->cantidad);
+                    $item->producto->decrement('stock', $item->cantidad);
                 }
 
-                // limpiar carrito temporal
+                // 🔹 LIMPIAR TMP
                 TmpVenta::where('session_id', $session_id)->delete();
 
                 return $venta;
@@ -180,7 +174,6 @@ class VentaController extends Controller
             $config = Configuracion::first();
 
             if ($config && $config->imprimir_ticket) {
-                // dd("ANTES DE IMPRIMIR", $venta->id);
                 $this->ImprimirTicket($venta->id);
             }
 
@@ -190,7 +183,6 @@ class VentaController extends Controller
                 'timer' => 2000
             ]);
         } catch (\Exception $e) {
-
             dd($e->getMessage(), $e->getLine(), $e->getFile());
         }
     }
@@ -206,7 +198,7 @@ class VentaController extends Controller
 
     public function anular($id)
     {
-        $venta = Venta::with('detalles.producto')->findOrFail($id);
+        $venta = Venta::with(['detalles.producto', 'pagos'])->findOrFail($id);
 
         // 🔴 Ya anulada
         if ($venta->activo == 0) {
@@ -249,16 +241,57 @@ class VentaController extends Controller
             ]);
 
             // 🔹 buscar caja activa
-            $caja = Caja::whereNull('fecha_cierre')->first();
+            $caja = $venta->caja ?? Caja::find($venta->caja_id) ?? Caja::whereNull('fecha_cierre')->first();
 
-            // 🔹 registrar movimiento en caja (inverso)
             if ($caja) {
-                MovimientoCaja::create([
-                    'monto' => $total,
-                    'descripcion' => "Anulación de venta #{$venta->id}",
-                    'tipo' => "egreso", // 👈 inverso del ingreso original
-                    'caja_id' => $caja->id
-                ]);
+                $pagos = $venta->pagos;
+
+                if ($pagos->isEmpty()) {
+                    $efectivoPago = MetodoPago::where('codigo', 'efectivo')->first();
+                    MovimientoCaja::create([
+                        'monto' => $total,
+                        'descripcion' => "Anulación de venta #{$venta->id}",
+                        'tipo' => "egreso",
+                        'caja_id' => $caja->id,
+                        'metodo_pago_id' => $efectivoPago->id ?? null,
+                    ]);
+                } else {
+                    $pagosPorMetodo = $pagos->groupBy(fn($pago) => Str::of($pago->metodo ?? '')
+                        ->trim()
+                        ->lower()
+                        ->ascii()
+                        ->toString());
+
+                    if ($pagosPorMetodo->isEmpty()) {
+                        $pagosPorMetodo = collect(['' => $pagos]);
+                    }
+
+                    $metodoPagoMap = MetodoPago::whereIn('codigo', $pagosPorMetodo->keys()->filter()->values()->toArray())
+                        ->get()
+                        ->keyBy(fn($metodoPago) => strtolower($metodoPago->codigo));
+
+                    foreach ($pagosPorMetodo as $codigo => $grupoPagos) {
+                        $montoMetodo = round($grupoPagos->sum('monto'), 2);
+                        $metodoPago = $metodoPagoMap->get($codigo);
+                        $label = $metodoPago ? $metodoPago->nombre : ($codigo ? ucfirst($codigo) : 'Pago');
+
+                        $movimiento = MovimientoCaja::create([
+                            'monto' => $montoMetodo,
+                            'descripcion' => "Anulación de venta #{$venta->id} ({$label})",
+                            'tipo' => "egreso",
+                            'caja_id' => $caja->id,
+                            'metodo_pago_id' => $metodoPago ? $metodoPago->id : null,
+                        ]);
+
+                        if ($metodoPagoMap->has($codigo)) {
+                            MovimientoCajaMetodo::create([
+                                'movimiento_caja_id' => $movimiento->id,
+                                'metodo_pago_id' => $metodoPagoMap[$codigo]->id,
+                                'monto' => $montoMetodo
+                            ]);
+                        }
+                    }
+                }
             }
         });
 

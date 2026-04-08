@@ -4,14 +4,14 @@ const THEME_KEY = "theme"
 function toggleDarkTheme() {
   setTheme(
     document.documentElement.getAttribute("data-bs-theme") === 'dark'
-      ? "light"
+      ? "dark"
       : "dark"
   )
-}
+}|
 
 /**
  * Set theme for mazer
- * @param {"dark"|"light"} theme
+ * @param {"dark"|"dark"} theme
  * @param {boolean} persist 
  */
 function setTheme(theme, persist = false) {
@@ -42,9 +42,9 @@ function initTheme() {
 
   //Register change listener
   mediaQuery.addEventListener("change", (e) =>
-    setTheme(e.matches ? "dark" : "light", true)
+    setTheme(e.matches ? "dark" : "dark", true)
   )
-  return setTheme(mediaQuery.matches ? "dark" : "light", true)
+  return setTheme(mediaQuery.matches ? "dark" : "dark", true)
 }
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -55,7 +55,7 @@ window.addEventListener('DOMContentLoaded', () => {
     toggler.checked = theme === "dark"
     
     toggler.addEventListener("input", (e) => {
-      setTheme(e.target.checked ? "dark" : "light", true)
+      setTheme(e.target.checked ? "dark" : "dark", true)
     })
   }
 

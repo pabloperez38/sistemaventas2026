@@ -31,6 +31,10 @@ class Venta extends Model
 
         return $this->belongsTo(Cliente::class);
     }
+    public function caja()
+    {
+        return $this->belongsTo(Caja::class);
+    }
     public function productos()
     {
         return $this->belongsToMany(

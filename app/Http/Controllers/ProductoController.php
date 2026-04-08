@@ -6,6 +6,7 @@ use App\Models\Categoria;
 use App\Models\Marca;
 use App\Models\Producto;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ProductoController extends Controller
 {
@@ -157,5 +158,104 @@ class ProductoController extends Controller
             'title' => 'Producto restaurado correctamente',
             'timer' => 2000
         ]);
+    }
+    public function updatePrice(Request $request)
+    {
+
+        $categorias = Categoria::orderBy('nombre', 'asc')->get();
+        $marcas = Marca::orderBy('nombre', 'asc')->get();
+
+        return view('admin.productos.update_price', compact('categorias', 'marcas'));
+    }
+
+    public function actualizarPrecios(Request $request)
+    {
+        // dd('entro', $request->all());
+
+        $request->validate([
+            'porcentaje' => 'required|numeric|min:0',
+            'tipo' => 'required|in:aumento,descuento',
+            'categorias' => 'nullable|array',
+            'marcas' => 'nullable|array',
+        ]);
+
+        $accion = $request->accion;
+
+        $porcentaje = $request->porcentaje;
+        $tipo = $request->tipo;
+        $categorias = $request->categorias;
+        $marcas = $request->marcas;
+
+        $query = Producto::query();
+
+        if (!empty($categorias)) {
+            $query->whereIn('categoria_id', $categorias);
+        }
+
+        if (!empty($marcas)) {
+            $query->whereIn('marca_id', $marcas);
+        }
+
+        $total = $query->count();
+
+        if ($total === 0) {
+            return back()->with('error', 'No hay productos para actualizar');
+        }
+
+        $factor = $tipo === 'aumento'
+            ? (1 + $porcentaje / 100)
+            : (1 - $porcentaje / 100);
+
+        // =========================
+        // 👀 PREVIEW
+        // =========================
+        if ($accion === 'preview') {
+
+            $productos = $query->limit(100)->get();
+
+            $preview = $productos->map(function ($p) use ($factor) {
+                return [
+                    'nombre' => $p->nombre,
+                    'precio_actual' => $p->precio_venta,
+                    'precio_nuevo' => round($p->precio_venta * $factor, 2),
+                ];
+            });
+
+            return view('admin.productos.preview', [
+                'preview' => $preview,
+                'total' => $total,
+                'requestData' => $request->all()
+            ]);
+        }
+
+        // =========================
+        // ⚡ APLICAR
+        // =========================
+        DB::beginTransaction();
+
+        try {
+
+            $query->update([
+                'precio_venta' => DB::raw("ROUND(precio_venta * $factor, 2)")
+            ]);
+
+            DB::commit();
+
+            return redirect()->route('admin.productos.index')->with('swal', [
+                'icon' => 'success',
+                'total' => $total,
+                'title' => "Se actualizaron {$total} productos correctamente",
+                'timer' => 2000
+            ]);
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return redirect()->route('admin.productos.index')->with('swal', [
+                'icon' => 'error',
+                'title' => 'Error al actualizar precios',
+                'timer' => 2000
+            ]);
+        }
     }
 }

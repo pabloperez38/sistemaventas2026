@@ -46,11 +46,29 @@
             </div>
         </div>
         <div id="main">
-            <header class="mb-3">
-                <a href="#" class="burger-btn d-block d-xl-none">
-                    <i class="bi bi-justify fs-3"></i>
-                </a>
-            </header>
+           <header>
+                    <nav class="navbar navbar-expand navbar-light navbar-top">
+                        <div class="container-fluid">
+                           
+
+                            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                                <span class="navbar-toggler-icon"></span>
+                            </button>
+                            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                                <ul class="navbar-nav ms-auto mb-lg-0">
+                                    <li class="nav-item dropdown me-1">
+                                       <a class="btn btn-danger" href="">
+                                        i
+                                        Vender</a>
+                                       
+                                    </li>
+                                   
+                                </ul>
+                               
+                            </div>
+                        </div>
+                    </nav>
+                </header>
 
             <div class="page-content">
                 @yield('content')

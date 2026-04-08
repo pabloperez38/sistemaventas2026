@@ -9,6 +9,7 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Producto;
+use App\Models\Proveedor;
 use Database\Seeders\CategoriaSeeder;
 use Database\Seeders\MarcaSeeder;
 
@@ -40,6 +41,16 @@ class DatabaseSeeder extends Seeder
             'email' => 'pablo.vendedor@gmail.com',
             'password' => Hash::make('12345678'),
         ])->assignRole('Vendedor');
+
+        Proveedor::firstOrCreate([
+            'nombre' => 'Proveedor 1',
+            'cuit' => '30-12345678-9',
+            'telefono' => '555-5678',
+            'email' => 'proveedor1@miempresa.com',
+            'empresa' => 'Empresa Proveedor 1',
+            'direccion' => 'Calle Proveedor 123',
+            'activo' => true,
+        ]);
 
         Configuracion::firstOrCreate([
             'nombre_empresa' => 'Mi Empresa',

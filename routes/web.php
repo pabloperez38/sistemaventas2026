@@ -74,6 +74,7 @@ Route::put('/admin/marcas/{id}', [MarcaController::class, 'update'])->name('admi
 Route::delete('/admin/marcas/{id}', [MarcaController::class, 'destroy'])->name('admin.marcas.destroy')->middleware('auth', 'can:Eliminar Marcas');
 Route::get('marcas/{id}/restore', [MarcaController::class, 'restore'])->name('admin.marcas.restore')->middleware('auth', 'can:Restaurar Marcas');
 
+
 //Productos
 Route::get('/admin/productos', [ProductoController::class, 'index'])->name('admin.productos.index')->middleware('auth', 'can:Ver Productos');
 Route::get('/admin/productos/create', [ProductoController::class, 'create'])->name('admin.productos.create')->middleware('auth', 'can:Formulario Crear Productos');
@@ -83,6 +84,8 @@ Route::get('/admin/productos/{id}/edit', [ProductoController::class, 'edit'])->n
 Route::put('/admin/productos/{id}', [ProductoController::class, 'update'])->name('admin.productos.update')->middleware('auth', 'can:Editar Productos');
 Route::delete('/admin/productos/{id}', [ProductoController::class, 'destroy'])->name('admin.productos.destroy')->middleware('auth', 'can:Eliminar Productos');
 Route::get('productos/restaurar/{id}', [ProductoController::class, 'restaurar'])->name('admin.productos.restaurar')->middleware('auth', 'can:Restaurar Productos');
+Route::get('/admin/productos/update-price', [ProductoController::class, 'updatePrice'])->name('admin.productos.updatePrice')->middleware('auth', 'can:Actualizar Precios Productos');
+Route::post('productos/actualizar-precios', [ProductoController::class, 'actualizarPrecios'])->name('admin.productos.actualizarPrecios')->middleware('auth', 'can:Acción Actualizar Precios Productos');
 
 //Proveedores
 Route::get('/admin/proveedores', [ProveedorController::class, 'index'])->name('admin.proveedores.index')->middleware('auth', 'can:Ver Proveedores');

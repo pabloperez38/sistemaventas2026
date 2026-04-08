@@ -232,15 +232,18 @@
                                     <tbody>
                                         @foreach ($movimientos as $mov)
                                             <tr>
-                                                <td>{{ \Carbon\Carbon::parse($mov['fecha'])->format('d/m/Y H:i') }}
-                                                </td>
+                                                <td>{{ \Carbon\Carbon::parse($mov['fecha'])->format('d/m/Y H:i') }}</td>
 
                                                 {{-- Columna Tipo --}}
                                                 <td>
                                                     @if ($mov['tipo'] == 'apertura')
                                                         <span class="badge bg-primary">Apertura</span>
                                                     @elseif ($mov['tipo'] == 'ingreso')
-                                                        <span class="badge bg-success">Ingreso</span>
+                                                        @if (($mov['metodo_codigo'] ?? '') == 'efectivo' && str_contains($mov['descripcion'], 'Venta'))
+                                                            <span class="badge bg-success">Pago</span>
+                                                        @else
+                                                            <span class="badge bg-success">Ingreso</span>
+                                                        @endif
                                                     @elseif($mov['tipo'] == 'pago')
                                                         <span class="badge bg-info">Pago</span>
                                                     @else
@@ -268,17 +271,33 @@
                                                 <td>
                                                     @php
                                                         $tipo = ucfirst($mov['tipo']);
-                                                        $metodo = strtolower($mov['metodo'] ?? 'desconocido');
+
+                                                        // 🔥 SOLO ventas en efectivo → mostrar como Pago
+                                                        if (
+                                                            $mov['tipo'] == 'ingreso' &&
+                                                            ($mov['metodo_codigo'] ?? '') == 'efectivo' &&
+                                                            str_contains($mov['descripcion'], 'Venta')
+                                                        ) {
+                                                            $tipo = 'Pago';
+                                                        }
+
+                                                        $metodoCodigo = strtolower(
+                                                            $mov['metodo_codigo'] ?? ($mov['metodo'] ?? 'desconocido'),
+                                                        );
+
+                                                        $metodoTexto = $mov['metodo'] ?? ucfirst($metodoCodigo);
 
                                                         if ($mov['tipo'] == 'apertura') {
                                                             $color = 'bg-primary';
                                                             $metodoTexto = 'Apertura';
-                                                        } elseif ($mov['tipo'] == 'egreso') {
+                                                        } elseif (
+                                                            $mov['tipo'] == 'egreso' &&
+                                                            $metodoCodigo === 'efectivo'
+                                                        ) {
                                                             $color = 'bg-danger';
-                                                            $metodoTexto = ucfirst($metodo);
+                                                            $metodoTexto = 'Efectivo';
                                                         } else {
-                                                            // Colores según método de pago
-                                                            $color = match ($metodo) {
+                                                            $color = match ($metodoCodigo) {
                                                                 'efectivo' => 'bg-success',
                                                                 'debito' => 'bg-info',
                                                                 'credito' => 'bg-warning text-dark',
@@ -286,13 +305,15 @@
                                                                 'billetera' => 'bg-secondary',
                                                                 default => 'bg-secondary',
                                                             };
-                                                            $metodoTexto = match ($metodo) {
+
+                                                            $metodoTexto = match ($metodoCodigo) {
                                                                 'efectivo' => 'Efectivo',
                                                                 'debito' => 'Débito',
                                                                 'credito' => 'Crédito',
                                                                 'transferencia' => 'Transferencia',
                                                                 'billetera' => 'Billetera',
-                                                                default => 'Desconocido',
+                                                                'apertura' => 'Apertura',
+                                                                default => ucfirst($metodoTexto),
                                                             };
                                                         }
                                                     @endphp

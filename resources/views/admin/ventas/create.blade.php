@@ -652,6 +652,9 @@
         }
     </script>
     <script>
+        const metodosPago = @json($metodosPago);
+    </script>
+    <script>
         let total_venta = 0;
         let index = 0;
 
@@ -748,14 +751,15 @@
 
             let faltante = Math.max(0, total_venta - totalPagado);
 
+            let opciones = metodosPago.map(m => {
+                return `<option value="${m.id}">${m.nombre}</option>`;
+            }).join('');
+
             let fila = `
 <tr>
   <td>
     <select name="pagos[${index}][metodo]" class="form-control">
-      <option value="efectivo">Efectivo</option>
-      <option value="debito">Débito</option>
-      <option value="credito">Crédito</option>
-      <option value="transferencia">Transferencia</option>
+      ${opciones}
     </select>
   </td>
   <td>

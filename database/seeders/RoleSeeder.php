@@ -71,6 +71,8 @@ class RoleSeeder extends Seeder
         Permission::create(['name' => 'Editar Productos'])->syncRoles($superAdmin);
         Permission::create(['name' => 'Eliminar Productos'])->syncRoles($superAdmin);
         Permission::create(['name' => 'Restaurar Productos'])->syncRoles($superAdmin);
+        Permission::create(['name' => 'Actualizar Precios Productos'])->syncRoles($superAdmin);
+        Permission::create(['name' => 'Acción Actualizar Precios Productos'])->syncRoles($superAdmin);
 
         //Proveedores
         Permission::create(['name' => 'Ver Proveedores'])->syncRoles($superAdmin);
@@ -124,6 +126,5 @@ class RoleSeeder extends Seeder
         Permission::create(['name' => 'Crear Backups'])->syncRoles($superAdmin);
         Permission::create(['name' => 'Descargar Backups'])->syncRoles($superAdmin);
         Permission::create(['name' => 'Eliminar Backups'])->syncRoles($superAdmin);
-
     }
 }
