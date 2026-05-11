@@ -5,11 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Caja;
 use App\Models\MetodoPago;
 use App\Models\MovimientoCaja;
+use App\Models\MovimientoCajaMetodo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-
-use function Ramsey\Uuid\v1;
 
 class CajaController extends Controller
 {
@@ -20,6 +19,7 @@ class CajaController extends Controller
     {
         $caja_abierta = Caja::whereNull('fecha_cierre')->first();
         $cajas = Caja::orderBy('fecha_apertura', 'desc')->get();
+
         return view('admin.cajas.index', compact('cajas', 'caja_abierta'));
     }
 
@@ -39,19 +39,19 @@ class CajaController extends Controller
         $request->validate([
             'fecha_apertura' => 'required|date',
             'monto_inicial' => 'required|numeric|min:0',
-            'descripcion' => 'nullable|string|max:255'
+            'descripcion' => 'nullable|string|max:255',
         ]);
 
         Caja::create([
             'fecha_apertura' => $request->fecha_apertura,
             'monto_inicial' => $request->monto_inicial,
-            'descripcion' => $request->descripcion
+            'descripcion' => $request->descripcion,
         ]);
 
         return redirect()->route('admin.ventas.create')->with('swal', [
             'icon' => 'success',
             'title' => 'Caja abierta exitosamente',
-            'timer' => 2000
+            'timer' => 2000,
         ]);
     }
 
@@ -102,39 +102,48 @@ class CajaController extends Controller
                         'metodo_codigo' => $metodoCodigo,
                     ]);
 
-                    if (isset($totalesMetodos[$metodoCodigo])) {
-                        $totalesMetodos[$metodoCodigo] += $movimiento->tipo === 'egreso'
-                            ? -$mp->monto
-                            : $mp->monto;
+                    // Totales solo para ingresos (no egresos)
+                    if ($movimiento->tipo === 'ingreso' && isset($totalesMetodos[$metodoCodigo])) {
+                        $totalesMetodos[$metodoCodigo] += $mp->monto;
                     }
                 }
             } else {
+                $metodo = $movimiento->metodoPago;
+                $metodoCodigo = 'efectivo';
+                $metodoNombre = 'Efectivo';
+                $metodoId = 1;
 
-                // fallback (por si hay datos viejos)
+                if ($metodo) {
+                    $metodoCodigo = strtolower($metodo->codigo ?? 'efectivo');
+                    $metodoNombre = $metodo->nombre ?? ucfirst($metodoCodigo);
+                    $metodoId = $metodo->id;
+                }
+
                 $movimientos->push([
                     'tipo' => $movimiento->tipo,
                     'descripcion' => $movimiento->descripcion,
                     'monto' => $movimiento->monto,
                     'fecha' => $movimiento->created_at,
-                    'metodo' => 'Efectivo',
-                    'metodo_codigo' => 'efectivo',
+                    'metodo' => $metodoNombre,
+                    'metodo_codigo' => $metodoCodigo,
+                    'metodo_id' => $metodoId,
                 ]);
 
-                if ($movimiento->tipo === 'ingreso') {
-                    $totalesMetodos['efectivo'] += $movimiento->monto;
-                } elseif ($movimiento->tipo === 'egreso') {
-                    $totalesMetodos['efectivo'] -= $movimiento->monto;
+                // Totales solo para ingresos (no egresos)
+                if ($movimiento->tipo === 'ingreso' && isset($totalesMetodos[$metodoCodigo])) {
+                    $totalesMetodos[$metodoCodigo] += $movimiento->monto;
                 }
             }
         }
-
         // 🔹 3. PAGOS DE VENTAS (NUEVA LÓGICA)
         foreach ($caja->ventas as $venta) {
 
             foreach ($venta->pagos as $pago) {
 
                 $metodo = $pago->metodoPago;
-                if (!$metodo) continue;
+                if (! $metodo) {
+                    continue;
+                }
 
                 $idMetodo = $metodo->id;
 
@@ -143,7 +152,7 @@ class CajaController extends Controller
 
                     $movimientos->push([
                         'tipo' => 'ingreso',
-                        'descripcion' => 'Venta #' . $venta->id,
+                        'descripcion' => 'Venta #'.$venta->id,
                         'monto' => $pago->monto,
                         'fecha' => $pago->created_at,
                         'metodo' => $metodo->nombre,
@@ -163,7 +172,7 @@ class CajaController extends Controller
 
                     $movimientos->push([
                         'tipo' => 'pago',
-                        'descripcion' => 'Venta #' . $venta->id,
+                        'descripcion' => 'Venta #'.$venta->id,
                         'monto' => $pago->monto,
                         'fecha' => $pago->created_at,
                         'metodo' => $metodo->nombre,
@@ -201,20 +210,38 @@ class CajaController extends Controller
             }
 
             $mov['saldo'] = $saldo;
+
             return $mov;
         });
 
         $saldoFinal = $movimientos->last()['saldo'] ?? 0;
 
-        // 🔹 TOTALES GENERALES (opcional)
-        $ingresos = $movimientos->where('tipo', 'ingreso')->sum('monto');
-        $egresos = $movimientos->where('tipo', 'egreso')->sum('monto');
+        // 🔹 TOTALES GENERALES (solo efectivo afecta caja)
+        $ingresos_efectivo = $movimientos
+            ->where('metodo_codigo', 'efectivo')
+            ->where('tipo', 'ingreso')
+            ->sum('monto');
 
-        $caja->ingresos = $ingresos;
-        $caja->egresos = $egresos;
+        $egresos_efectivo = $movimientos
+            ->where('metodo_codigo', 'efectivo')
+            ->where('tipo', 'egreso')
+            ->sum('monto');
+
+        // Totales por método (para resumen)
+        $ventas_efectivo = $totalesMetodos['efectivo'];
+        $ventas_debito = $totalesMetodos['debito'];
+        $ventas_credito = $totalesMetodos['credito'];
+        $ventas_transferencia = $totalesMetodos['transferencia'];
+
+        $caja->ingresos = $ingresos_efectivo;
+        $caja->egresos = $egresos_efectivo;
         $caja->total_esperado = $saldoFinal;
         $caja->total_real = $caja->monto_final ?? 0;
         $caja->diferencia = $caja->total_real - $saldoFinal;
+        $caja->ventas_efectivo = $ventas_efectivo;
+        $caja->ventas_debito = $ventas_debito;
+        $caja->ventas_credito = $ventas_credito;
+        $caja->ventas_transferencia = $ventas_transferencia;
 
         return view('admin.cajas.show', compact(
             'caja',
@@ -230,6 +257,7 @@ class CajaController extends Controller
     public function edit(Caja $caja, $id)
     {
         $caja = Caja::findOrFail($id)->first();
+
         return view('admin.cajas.edit', compact('caja'));
     }
 
@@ -243,20 +271,20 @@ class CajaController extends Controller
         $request->validate([
             'fecha_apertura' => 'required|date',
             'monto_inicial' => 'required|numeric|min:0',
-            'descripcion' => 'nullable|string|max:255'
+            'descripcion' => 'nullable|string|max:255',
         ]);
 
         $caja->update([
             'fecha_apertura' => $request->fecha_apertura,
             'monto_inicial' => $request->monto_inicial,
-            'descripcion' => $request->descripcion
+            'descripcion' => $request->descripcion,
         ]);
 
         return redirect()->route('admin.cajas.index')
             ->with('swal', [
                 'icon' => 'success',
                 'title' => 'Caja actualizada exitosamente',
-                'timer' => 2000
+                'timer' => 2000,
             ]);
     }
 
@@ -309,22 +337,35 @@ class CajaController extends Controller
                         'metodo_id' => $mp->metodo_pago_id,
                     ]);
 
-                  
+                    if ($movimiento->tipo === 'ingreso' && isset($totalesMetodos[$metodoCodigo])) {
+                        $totalesMetodos[$metodoCodigo] += $mp->monto;
+                    }
                 }
             } else {
+                $metodo = $movimiento->metodoPago;
+                $metodoCodigo = 'efectivo';
+                $metodoNombre = 'Efectivo';
+                $metodoId = 1;
 
-                // fallback → efectivo
+                if ($metodo) {
+                    $metodoCodigo = strtolower($metodo->codigo ?? 'efectivo');
+                    $metodoNombre = $metodo->nombre ?? ucfirst($metodoCodigo);
+                    $metodoId = $metodo->id;
+                }
+
                 $movimientos->push([
                     'tipo' => $movimiento->tipo,
                     'descripcion' => $movimiento->descripcion,
                     'monto' => $movimiento->monto,
                     'fecha' => $movimiento->created_at,
-                    'metodo' => 'Efectivo',
-                    'metodo_codigo' => 'efectivo',
-                    'metodo_id' => 1,
+                    'metodo' => $metodoNombre,
+                    'metodo_codigo' => $metodoCodigo,
+                    'metodo_id' => $metodoId,
                 ]);
 
-              
+                if ($movimiento->tipo === 'ingreso' && isset($totalesMetodos[$metodoCodigo])) {
+                    $totalesMetodos[$metodoCodigo] += $movimiento->monto;
+                }
             }
         }
 
@@ -333,7 +374,9 @@ class CajaController extends Controller
             foreach ($venta->pagos as $pago) {
 
                 $metodo = $pago->metodoPago;
-                if (!$metodo) continue;
+                if (! $metodo) {
+                    continue;
+                }
 
                 $idMetodo = $metodo->id;
 
@@ -342,7 +385,7 @@ class CajaController extends Controller
                     // 🔥 EFECTIVO
                     $movimientos->push([
                         'tipo' => 'ingreso',
-                        'descripcion' => 'Venta #' . $venta->id,
+                        'descripcion' => 'Venta #'.$venta->id,
                         'monto' => $pago->monto,
                         'fecha' => $pago->created_at,
                         'metodo' => $metodo->nombre,
@@ -363,7 +406,7 @@ class CajaController extends Controller
 
                     $movimientos->push([
                         'tipo' => 'pago',
-                        'descripcion' => 'Venta #' . $venta->id,
+                        'descripcion' => 'Venta #'.$venta->id,
                         'monto' => $pago->monto,
                         'fecha' => $pago->created_at,
                         'metodo' => $metodo->nombre,
@@ -440,16 +483,17 @@ class CajaController extends Controller
                 'metodo_pago_id' => $request->metodo_pago_id,
             ]);
 
-            /*  $movimiento->metodosPago()->create([
+            MovimientoCajaMetodo::create([
+                'movimiento_caja_id' => $movimiento->id,
                 'metodo_pago_id' => $request->metodo_pago_id,
-                'monto' => $request->monto
-            ]); */
+                'monto' => $request->monto,
+            ]);
         });
 
         return redirect()->route('admin.cajas.index')->with('swal', [
             'icon' => 'success',
             'title' => 'Movimiento de caja creado exitosamente',
-            'timer' => 2000
+            'timer' => 2000,
         ]);
     }
 
@@ -458,11 +502,14 @@ class CajaController extends Controller
      */
     public function cerrar($id)
     {
-        $caja = Caja::with('movimientos', 'ventas.pagos')->findOrFail($id);
+        $caja = Caja::with(
+            'movimientos.metodosPago.metodoPago',
+            'movimientos.metodoPago',
+            'ventas.pagos.metodoPago'
+        )->findOrFail($id);
 
         $movimientos = collect();
 
-        // Totales por m�todo, ahora separados
         $totalesMetodos = [
             'efectivo' => 0,
             'debito' => 0,
@@ -470,68 +517,126 @@ class CajaController extends Controller
             'transferencia' => 0,
         ];
 
-
-        // 1?? Apertura (solo para mostrar en la tabla)
+        // 🔹 Apertura
         $movimientos->push([
             'tipo' => 'apertura',
             'descripcion' => 'Apertura de caja',
             'monto' => $caja->monto_inicial,
             'fecha' => $caja->fecha_apertura,
-            'metodo' => 'Apertura'
+            'metodo' => 'Apertura',
+            'metodo_codigo' => 'apertura',
+            'metodo_id' => 1,
         ]);
 
-        // 2?? Movimientos reales de caja (solo efectivo)
-        foreach ($caja->movimientos as $m) {
-            $movimientos->push([
-                'tipo' => $m->tipo,
-                'descripcion' => $m->descripcion,
-                'monto' => $m->monto,
-                'fecha' => $m->created_at,
-                'metodo' => $m->tipo == 'ingreso' ? 'Efectivo' : null,
-            ]);
+        // 🔹 Movimientos manuales
+        foreach ($caja->movimientos as $movimiento) {
 
-            // ? Solo sumar ingresos que comienzan con "Venta"
-            if ($m->tipo == 'ingreso' && str_starts_with($m->descripcion, 'Venta')) {
-                $totalesMetodos['efectivo'] += $m->monto;
-            }
-        }
+            if ($movimiento->metodosPago && $movimiento->metodosPago->count()) {
 
-        // 3?? Pagos de ventas (efectivo ya contado)
-        $ventas = $caja->ventas;
-        foreach ($ventas as $venta) {
-            foreach ($venta->pagos as $pago) {
-                if ($pago->metodo == 'efectivo') continue; // ya est� contado
+                foreach ($movimiento->metodosPago as $mp) {
+
+                    $metodoCodigo = strtolower($mp->metodoPago->codigo ?? 'efectivo');
+
+                    $movimientos->push([
+                        'tipo' => $movimiento->tipo,
+                        'descripcion' => $movimiento->descripcion,
+                        'monto' => $mp->monto,
+                        'fecha' => $movimiento->created_at,
+                        'metodo' => $mp->metodoPago->nombre ?? ucfirst($metodoCodigo),
+                        'metodo_codigo' => $metodoCodigo,
+                        'metodo_id' => $mp->metodo_pago_id,
+                    ]);
+
+                    if ($movimiento->tipo === 'ingreso' && isset($totalesMetodos[$metodoCodigo])) {
+                        $totalesMetodos[$metodoCodigo] += $mp->monto;
+                    }
+                }
+            } else {
+                $metodo = $movimiento->metodoPago;
+                $metodoCodigo = 'efectivo';
+                $metodoNombre = 'Efectivo';
+                $metodoId = 1;
+
+                if ($metodo) {
+                    $metodoCodigo = strtolower($metodo->codigo ?? 'efectivo');
+                    $metodoNombre = $metodo->nombre ?? ucfirst($metodoCodigo);
+                    $metodoId = $metodo->id;
+                }
+
                 $movimientos->push([
-                    'tipo' => 'pago',
-                    'descripcion' => 'Venta #' . $venta->id,
-                    'monto' => $pago->monto,
-                    'fecha' => $pago->created_at,
-                    'metodo' => ucfirst($pago->metodo),
+                    'tipo' => $movimiento->tipo,
+                    'descripcion' => $movimiento->descripcion,
+                    'monto' => $movimiento->monto,
+                    'fecha' => $movimiento->created_at,
+                    'metodo' => $metodoNombre,
+                    'metodo_codigo' => $metodoCodigo,
+                    'metodo_id' => $metodoId,
                 ]);
 
-                // Acumular totales por m�todo
-                if (isset($totalesMetodos[$pago->metodo])) {
-                    $totalesMetodos[$pago->metodo] += $pago->monto;
+                if ($movimiento->tipo === 'ingreso' && isset($totalesMetodos[$metodoCodigo])) {
+                    $totalesMetodos[$metodoCodigo] += $movimiento->monto;
                 }
             }
         }
 
-        // 4?? Ordenar por fecha
-        $movimientos = $movimientos->sortBy('fecha');
+        // 🔹 Pagos de ventas
+        foreach ($caja->ventas as $venta) {
+            foreach ($venta->pagos as $pago) {
 
-        // 5?? Calcular saldo (solo efectivo)
-        $saldo = 0;
-        $movimientos = $movimientos->map(function ($mov) use (&$saldo) {
-            if ($mov['tipo'] == 'apertura' || $mov['tipo'] == 'ingreso') {
-                $saldo += $mov['monto'];
-            } elseif ($mov['tipo'] == 'egreso') {
-                $saldo -= $mov['monto'];
+                $metodo = $pago->metodoPago;
+                if (! $metodo) {
+                    continue;
+                }
+
+                $idMetodo = $metodo->id;
+                $metodoCodigo = strtolower($metodo->codigo ?? 'efectivo');
+
+                $movimientos->push([
+                    'tipo' => 'ingreso',
+                    'descripcion' => 'Venta #'.$venta->id,
+                    'monto' => $pago->monto,
+                    'fecha' => $pago->created_at,
+                    'metodo' => $metodo->nombre,
+                    'metodo_codigo' => $metodoCodigo,
+                    'metodo_id' => $idMetodo,
+                ]);
+
+                if (isset($totalesMetodos[$metodoCodigo])) {
+                    $totalesMetodos[$metodoCodigo] += $pago->monto;
+                }
             }
+        }
+
+        // 🔹 Ordenar por fecha
+        $movimientos = $movimientos->sortBy('fecha')->values();
+
+        // 🔹 Saldo (solo efectivo)
+        $saldo = 0;
+
+        $movimientos = $movimientos->map(function ($mov) use (&$saldo) {
+
+            if ($mov['tipo'] === 'apertura') {
+                $saldo += $mov['monto'];
+            }
+
+            if (($mov['metodo_id'] ?? null) == 1) {
+
+                if ($mov['tipo'] === 'ingreso') {
+                    $saldo += $mov['monto'];
+                }
+
+                if ($mov['tipo'] === 'egreso') {
+                    $saldo -= $mov['monto'];
+                }
+            }
+
             $mov['saldo'] = $saldo;
+
             return $mov;
         });
 
         $saldoFinal = $movimientos->last()['saldo'] ?? 0;
+
         return view('admin.cajas.cierre', compact('caja', 'movimientos', 'saldoFinal', 'totalesMetodos'));
     }
 
@@ -547,14 +652,14 @@ class CajaController extends Controller
         $caja->update([
             'fecha_cierre' => $request->fecha_cierre,
             'monto_final' => $request->monto_final,
-            'activo' => 0
+            'activo' => 0,
 
         ]);
 
         return redirect()->route('admin.cajas.index')->with('swal', [
             'icon' => 'success',
             'title' => 'Caja cerrada exitosamente',
-            'timer' => 2000
+            'timer' => 2000,
         ]);
     }
 }

@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\MovimientoCajaMetodo;
 
 class MovimientoCaja extends Model
 {
@@ -13,7 +12,7 @@ class MovimientoCaja extends Model
         'descripcion',
         'tipo',
         'caja_id',
-        'metodo_pago_id'
+        'metodo_pago_id',
     ];
 
     use HasFactory;
@@ -26,5 +25,10 @@ class MovimientoCaja extends Model
     public function metodosPago()
     {
         return $this->hasMany(MovimientoCajaMetodo::class);
+    }
+
+    public function metodoPago()
+    {
+        return $this->belongsTo(MetodoPago::class, 'metodo_pago_id');
     }
 }

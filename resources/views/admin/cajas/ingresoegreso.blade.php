@@ -82,8 +82,7 @@
                                                     <div class="position-relative">
                                                         <input type="text" value="{{ old('monto') }}"
                                                             class="form-control @error('monto') is-invalid @enderror"
-                                                            id="monto" placeholder="Ingrese monto inicial"
-                                                            name="monto">
+                                                            id="monto" placeholder="Ingrese monto" name="monto">
                                                         <div class="form-control-icon">
                                                             <i class="bi bi-cash-stack"></i>
                                                         </div>
@@ -214,7 +213,7 @@
 
                         <div class="card">
                             <div class="card-header">
-                                <h4 class="card-title">Detalles</h4>
+                                <h4 class="card-title">Detalle flujo de caja</h4>
                             </div>
                             <div class="card-body">
                                 <table class="table table-bordered table-striped">
@@ -234,90 +233,109 @@
                                             <tr>
                                                 <td>{{ \Carbon\Carbon::parse($mov['fecha'])->format('d/m/Y H:i') }}</td>
 
+                                                @php
+                                                    /*
+                |--------------------------------------------------------------------------
+                | MAPEO MÉTODOS DE PAGO
+                |--------------------------------------------------------------------------
+                */
+                                                    $metodos = [
+                                                        1 => 'efectivo',
+                                                        2 => 'debito',
+                                                        3 => 'credito',
+                                                        4 => 'transferencia',
+                                                    ];
+
+                                                    $codigoOriginal = $mov['metodo_codigo'] ?? ($mov['metodo'] ?? null);
+
+                                                    $metodoCodigo =
+                                                        $metodos[$codigoOriginal] ??
+                                                        strtolower($codigoOriginal ?? 'desconocido');
+
+                                                    /*
+                |--------------------------------------------------------------------------
+                | DETECTAR VENTA EN EFECTIVO
+                |--------------------------------------------------------------------------
+                */
+                                                    $descripcion = strtolower($mov['descripcion'] ?? '');
+
+                                                    $esPagoVenta =
+                                                        $mov['tipo'] == 'ingreso' &&
+                                                        $metodoCodigo == 'efectivo' &&
+                                                        str_contains($descripcion, 'venta');
+
+                                                    /*
+                |--------------------------------------------------------------------------
+                | TIPO VISUAL
+                |--------------------------------------------------------------------------
+                */
+                                                    $tipo = ucfirst($mov['tipo']);
+
+                                                    if ($mov['tipo'] === 'pago') {
+                                                        $tipo = 'Egreso';
+                                                    }
+
+                                                    /*
+                |--------------------------------------------------------------------------
+                | MÉTODO TEXTO
+                |--------------------------------------------------------------------------
+                */
+                                                    $metodoTexto = match ($metodoCodigo) {
+                                                        'efectivo' => 'Efectivo',
+                                                        'debito' => 'Débito',
+                                                        'credito' => 'Crédito',
+                                                        'transferencia' => 'Transferencia',
+                                                        'billetera' => 'Billetera',
+                                                        'apertura' => 'Apertura',
+                                                        default => ucfirst($metodoCodigo),
+                                                    };
+
+                                                    /*
+                |--------------------------------------------------------------------------
+                | COLOR BADGE
+                |--------------------------------------------------------------------------
+                */
+                                                    if ($mov['tipo'] == 'apertura') {
+                                                        $color = 'bg-primary';
+                                                        $metodoTexto = 'Apertura';
+                                                    } elseif (in_array($mov['tipo'], ['egreso', 'pago'])) {
+                                                        $color = 'bg-danger';
+                                                    } else {
+                                                        $color = 'bg-success';
+                                                    }
+                                                @endphp
+
                                                 {{-- Columna Tipo --}}
                                                 <td>
                                                     @if ($mov['tipo'] == 'apertura')
                                                         <span class="badge bg-primary">Apertura</span>
                                                     @elseif ($mov['tipo'] == 'ingreso')
-                                                        @if (($mov['metodo_codigo'] ?? '') == 'efectivo' && str_contains($mov['descripcion'], 'Venta'))
-                                                            <span class="badge bg-success">Pago</span>
-                                                        @else
-                                                            <span class="badge bg-success">Ingreso</span>
-                                                        @endif
-                                                    @elseif($mov['tipo'] == 'pago')
-                                                        <span class="badge bg-info">Pago</span>
+                                                        <span class="badge bg-success">Ingreso</span>
+                                                    @elseif ($mov['tipo'] == 'pago')
+                                                        <span class="badge bg-danger">Egreso</span>
                                                     @else
                                                         <span class="badge bg-danger">Egreso</span>
                                                     @endif
                                                 </td>
 
+                                                {{-- Descripción --}}
                                                 <td>{{ $mov['descripcion'] }}</td>
 
                                                 {{-- Columna Monto --}}
                                                 <td class="text-end">
                                                     @if (in_array($mov['tipo'], ['apertura', 'ingreso']))
-                                                        <span class="text-success">+ $
-                                                            {{ number_format($mov['monto'], 2) }}</span>
-                                                    @elseif ($mov['tipo'] == 'egreso')
-                                                        <span class="text-danger">- $
-                                                            {{ number_format($mov['monto'], 2) }}</span>
-                                                    @elseif ($mov['tipo'] == 'pago')
-                                                        <span class="text-primary">$
-                                                            {{ number_format($mov['monto'], 2) }}</span>
+                                                        <span class="text-success">
+                                                            + $ {{ number_format($mov['monto'], 2) }}
+                                                        </span>
+                                                    @elseif (in_array($mov['tipo'], ['egreso', 'pago']))
+                                                        <span class="text-danger">
+                                                            - $ {{ number_format($mov['monto'], 2) }}
+                                                        </span>
                                                     @endif
                                                 </td>
 
                                                 {{-- Columna Método --}}
                                                 <td>
-                                                    @php
-                                                        $tipo = ucfirst($mov['tipo']);
-
-                                                        // 🔥 SOLO ventas en efectivo → mostrar como Pago
-                                                        if (
-                                                            $mov['tipo'] == 'ingreso' &&
-                                                            ($mov['metodo_codigo'] ?? '') == 'efectivo' &&
-                                                            str_contains($mov['descripcion'], 'Venta')
-                                                        ) {
-                                                            $tipo = 'Pago';
-                                                        }
-
-                                                        $metodoCodigo = strtolower(
-                                                            $mov['metodo_codigo'] ?? ($mov['metodo'] ?? 'desconocido'),
-                                                        );
-
-                                                        $metodoTexto = $mov['metodo'] ?? ucfirst($metodoCodigo);
-
-                                                        if ($mov['tipo'] == 'apertura') {
-                                                            $color = 'bg-primary';
-                                                            $metodoTexto = 'Apertura';
-                                                        } elseif (
-                                                            $mov['tipo'] == 'egreso' &&
-                                                            $metodoCodigo === 'efectivo'
-                                                        ) {
-                                                            $color = 'bg-danger';
-                                                            $metodoTexto = 'Efectivo';
-                                                        } else {
-                                                            $color = match ($metodoCodigo) {
-                                                                'efectivo' => 'bg-success',
-                                                                'debito' => 'bg-info',
-                                                                'credito' => 'bg-warning text-dark',
-                                                                'transferencia' => 'bg-primary',
-                                                                'billetera' => 'bg-secondary',
-                                                                default => 'bg-secondary',
-                                                            };
-
-                                                            $metodoTexto = match ($metodoCodigo) {
-                                                                'efectivo' => 'Efectivo',
-                                                                'debito' => 'Débito',
-                                                                'credito' => 'Crédito',
-                                                                'transferencia' => 'Transferencia',
-                                                                'billetera' => 'Billetera',
-                                                                'apertura' => 'Apertura',
-                                                                default => ucfirst($metodoTexto),
-                                                            };
-                                                        }
-                                                    @endphp
-
                                                     <span class="badge {{ $color }}">
                                                         {{ $tipo }} - {{ $metodoTexto }}
                                                     </span>

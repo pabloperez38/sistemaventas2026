@@ -46,29 +46,34 @@
             </div>
         </div>
         <div id="main">
-           <header>
-                    <nav class="navbar navbar-expand navbar-light navbar-top">
-                        <div class="container-fluid">
-                           
+            <header>
+                <nav class="navbar navbar-expand navbar-light navbar-top">
+                    <div class="container-fluid">
 
-                            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                                <span class="navbar-toggler-icon"></span>
-                            </button>
-                            <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                                <ul class="navbar-nav ms-auto mb-lg-0">
-                                    <li class="nav-item dropdown me-1">
-                                       <a class="btn btn-danger" href="">
-                                        i
-                                        Vender</a>
-                                       
-                                    </li>
-                                   
-                                </ul>
-                               
-                            </div>
+
+                        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                            aria-expanded="false" aria-label="Toggle navigation">
+                            <span class="navbar-toggler-icon"></span>
+                        </button>
+                        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                            <ul class="navbar-nav ms-auto mb-lg-0">
+                                <li class="nav-item dropdown me-1">
+
+                                    <a href="{{ route('admin.ventas.create') }}" class="btn icon icon-left btn-danger">
+
+                                        <i class="bi bi-plus-circle"></i> Crear venta
+                                    </a>
+
+
+                                </li>
+
+                            </ul>
+
                         </div>
-                    </nav>
-                </header>
+                    </div>
+                </nav>
+            </header>
 
             <div class="page-content">
                 @yield('content')

@@ -123,7 +123,7 @@
                     <div class="col-md-8">
                         <div class="card">
                             <div class="card-header">
-                                <h4 class="card-title">Detalles</h4>
+                                <h4 class="card-title">Detalle flujo de caja</h4>
                             </div>
                             <div class="card-body">
                                 <table class="table table-bordered table-striped">
@@ -151,7 +151,7 @@
                                                     @elseif ($mov['tipo'] == 'ingreso')
                                                         <span class="badge bg-success">Ingreso</span>
                                                     @elseif($mov['tipo'] == 'pago')
-                                                        <span class="badge bg-info">Pago</span>
+                                                        <span class="badge bg-danger">Egreso</span>
                                                     @else
                                                         <span class="badge bg-danger">Egreso</span>
                                                     @endif
@@ -164,11 +164,8 @@
                                                     @if (in_array($mov['tipo'], ['apertura', 'ingreso']))
                                                         <span class="text-success">+ $
                                                             {{ number_format($mov['monto'], 2) }}</span>
-                                                    @elseif ($mov['tipo'] == 'egreso')
+                                                    @elseif (in_array($mov['tipo'], ['egreso', 'pago']))
                                                         <span class="text-danger">- $
-                                                            {{ number_format($mov['monto'], 2) }}</span>
-                                                    @elseif ($mov['tipo'] == 'pago')
-                                                        <span class="text-primary">$
                                                             {{ number_format($mov['monto'], 2) }}</span>
                                                     @endif
                                                 </td>
@@ -176,24 +173,23 @@
                                                 {{-- Columna Método --}}
                                                 <td>
                                                     @php
-                                                        $tipo = ucfirst($mov['tipo']);
-                                                        $metodo = $mov['metodo'] ?? 'Desconocido';
+                                                        $tipo =
+                                                            $mov['tipo'] === 'pago' ? 'Egreso' : ucfirst($mov['tipo']);
+                                                        $metodoNombre = $mov['metodo'] ?? 'Desconocido';
+                                                        $metodoCodigo = strtolower(
+                                                            $mov['metodo_codigo'] ?? 'desconocido',
+                                                        );
                                                     @endphp
 
                                                     @if ($mov['tipo'] == 'apertura')
-                                                        <span class="badge bg-primary">Apertura</span>
+                                                        <span class="badge bg-primary">Apertura - Apertura</span>
                                                     @else
                                                         @php
-                                                            // Color según tipo
-                                                            $color = match ($mov['tipo']) {
-                                                                'ingreso' => 'bg-success',
-                                                                'egreso' => 'bg-danger',
-                                                                'pago' => 'bg-info',
-                                                                default => 'bg-secondary',
-                                                            };
+                                                            $color = in_array($mov['tipo'], ['egreso', 'pago'])
+                                                                ? 'bg-danger'
+                                                                : 'bg-success';
 
-                                                            // Ajuste visual método
-                                                            $metodoTexto = match (strtolower($metodo)) {
+                                                            $metodoTexto = match ($metodoCodigo) {
                                                                 'efectivo' => 'Efectivo',
                                                                 'debito' => 'Débito',
                                                                 'credito' => 'Crédito',

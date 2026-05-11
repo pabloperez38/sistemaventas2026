@@ -1,5 +1,12 @@
 <?php
 
+use AgustinZamar\LaravelArcaSdk\Contracts\Request\CreateInvoiceRequest;
+use AgustinZamar\LaravelArcaSdk\Domain\Identification;
+use AgustinZamar\LaravelArcaSdk\Enums\Currency;
+use AgustinZamar\LaravelArcaSdk\Enums\IdentificationType;
+use AgustinZamar\LaravelArcaSdk\Enums\InvoiceConcept;
+use AgustinZamar\LaravelArcaSdk\Enums\InvoiceType;
+use AgustinZamar\LaravelArcaSdk\Facades\Arca;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\CajaController;
@@ -33,11 +40,11 @@ Route::middleware('auth')->group(function () {
         ->name('admin.index');
 });
 
-//Configuración
+// Configuración
 Route::get('/admin/configuracion', [ConfiguracionController::class, 'index'])->name('admin.configuracion.index')->middleware('auth', 'can:Ver Configuración');
 Route::put('/admin/configuracion', [ConfiguracionController::class, 'update'])->name('admin.configuracion.update')->middleware('auth', 'can:Editar Configuración');
 
-//Roles
+// Roles
 Route::get('/admin/roles', [RoleController::class, 'index'])->name('admin.roles.index')->middleware('auth', 'can:Ver Roles');
 Route::get('/admin/roles/create', [RoleController::class, 'create'])->name('admin.roles.create')->middleware('auth', 'can:Formulario Crear Roles');
 Route::post('/admin/roles', [RoleController::class, 'store'])->name('admin.roles.store')->middleware('auth', 'can:Guardar Roles');
@@ -47,7 +54,7 @@ Route::put('/admin/roles/{role}/update_permisos', [RoleController::class, 'updat
 Route::put('/admin/roles/{role}', [RoleController::class, 'update'])->name('admin.roles.update')->middleware('auth', 'can:Editar Roles');
 Route::delete('/admin/roles/{role}', [RoleController::class, 'destroy'])->name('admin.roles.destroy')->middleware('auth', 'can:Eliminar Roles');
 
-//Usuarios
+// Usuarios
 Route::get('/admin/usuarios', [UsuarioController::class, 'index'])->name('admin.usuarios.index')->middleware('auth', 'can:Ver Usuarios');
 Route::get('/admin/usuarios/create', [UsuarioController::class, 'create'])->name('admin.usuarios.create')->middleware('auth', 'can:Formulario Crear Usuarios');
 Route::post('/admin/usuarios', [UsuarioController::class, 'store'])->name('admin.usuarios.store')->middleware('auth', 'can:Guardar Usuarios');
@@ -56,7 +63,7 @@ Route::get('/admin/usuarios/{id}/edit', [UsuarioController::class, 'edit'])->nam
 Route::put('/admin/usuarios/{id}', [UsuarioController::class, 'update'])->name('admin.usuarios.update')->middleware('auth', 'can:Editar Usuarios');
 Route::delete('/admin/usuarios/{id}', [UsuarioController::class, 'destroy'])->name('admin.usuarios.destroy')->middleware('auth', 'can:Eliminar Usuarios');
 
-//Categorias
+// Categorias
 Route::get('/admin/categorias', [CategoriaController::class, 'index'])->name('admin.categorias.index')->middleware('auth', 'can:Ver Categorías');
 Route::get('/admin/categorias/create', [CategoriaController::class, 'create'])->name('admin.categorias.create')->middleware('auth', 'can:Formulario Crear Categorías');
 Route::post('/admin/categorias', [CategoriaController::class, 'store'])->name('admin.categorias.store')->middleware('auth', 'can:Guardar Categorías');
@@ -65,7 +72,7 @@ Route::put('/admin/categorias/{id}', [CategoriaController::class, 'update'])->na
 Route::delete('/admin/categorias/{id}', [CategoriaController::class, 'destroy'])->name('admin.categorias.destroy')->middleware('auth', 'can:Eliminar Categorías');
 Route::get('categorias/{id}/restore', [CategoriaController::class, 'restore'])->name('admin.categorias.restore')->middleware('auth', 'can:Restaurar Categorías');
 
-//Marcas
+// Marcas
 Route::get('/admin/marcas', [MarcaController::class, 'index'])->name('admin.marcas.index')->middleware('auth', 'can:Ver Marcas');
 Route::get('/admin/marcas/create', [MarcaController::class, 'create'])->name('admin.marcas.create')->middleware('auth', 'can:Formulario Crear Marcas');
 Route::post('/admin/marcas', [MarcaController::class, 'store'])->name('admin.marcas.store')->middleware('auth', 'can:Guardar Marcas');
@@ -74,8 +81,7 @@ Route::put('/admin/marcas/{id}', [MarcaController::class, 'update'])->name('admi
 Route::delete('/admin/marcas/{id}', [MarcaController::class, 'destroy'])->name('admin.marcas.destroy')->middleware('auth', 'can:Eliminar Marcas');
 Route::get('marcas/{id}/restore', [MarcaController::class, 'restore'])->name('admin.marcas.restore')->middleware('auth', 'can:Restaurar Marcas');
 
-
-//Productos
+// Productos
 Route::get('/admin/productos', [ProductoController::class, 'index'])->name('admin.productos.index')->middleware('auth', 'can:Ver Productos');
 Route::get('/admin/productos/create', [ProductoController::class, 'create'])->name('admin.productos.create')->middleware('auth', 'can:Formulario Crear Productos');
 Route::post('/admin/productos', [ProductoController::class, 'store'])->name('admin.productos.store')->middleware('auth', 'can:Guardar Productos');
@@ -87,7 +93,7 @@ Route::get('productos/restaurar/{id}', [ProductoController::class, 'restaurar'])
 Route::get('/admin/productos/update-price', [ProductoController::class, 'updatePrice'])->name('admin.productos.updatePrice')->middleware('auth', 'can:Actualizar Precios Productos');
 Route::post('productos/actualizar-precios', [ProductoController::class, 'actualizarPrecios'])->name('admin.productos.actualizarPrecios')->middleware('auth', 'can:Acción Actualizar Precios Productos');
 
-//Proveedores
+// Proveedores
 Route::get('/admin/proveedores', [ProveedorController::class, 'index'])->name('admin.proveedores.index')->middleware('auth', 'can:Ver Proveedores');
 Route::get('/admin/proveedores/create', [ProveedorController::class, 'create'])->name('admin.proveedores.create')->middleware('auth', 'can:Formulario Crear Proveedores');
 Route::post('/admin/proveedores', [ProveedorController::class, 'store'])->name('admin.proveedores.store')->middleware('auth', 'can:Guardar Proveedores');
@@ -97,19 +103,19 @@ Route::put('/admin/proveedores/{id}', [ProveedorController::class, 'update'])->n
 Route::delete('/admin/proveedores/{id}', [ProveedorController::class, 'destroy'])->name('admin.proveedores.destroy')->middleware('auth', 'can:Eliminar Proveedores');
 Route::get('proveedores/restaurar/{id}', [ProveedorController::class, 'restaurar'])->name('admin.proveedores.restaurar')->middleware('auth', 'can:Restaurar Proveedores');
 
-//Compras
+// Compras
 Route::get('/admin/compras', [CompraController::class, 'index'])->name('admin.compras.index')->middleware('auth', 'can:Ver Compras');
 Route::get('/admin/compras/create', [CompraController::class, 'create'])->name('admin.compras.create')->middleware('auth', 'can:Formulario Crear Compras');
 Route::post('/admin/compras', [CompraController::class, 'store'])->name('admin.compras.store')->middleware('auth', 'can:Guardar Compras');
 Route::get('/admin/compras/{id}', [CompraController::class, 'show'])->name('admin.compras.show')->middleware('auth', 'can:Ver Detalles Compras');
 Route::put('/admin/compras/{id}/anular', [CompraController::class, 'anular'])->name('admin.compras.anular')->middleware('auth', 'can:Anular Compras');
 
-//TPM compras
+// TPM compras
 Route::post('/admin/compras/create/tmp', [TmpCompraController::class, 'tmp_compras'])->name('admin.compras.tmp_compras')->middleware('auth');
 Route::delete('/admin/compras/create/tmp/{id}', [TmpCompraController::class, 'destroy'])->name('admin.compras.tmp_compras.destroy')->middleware('auth');
 Route::post('/admin/compras/actualizar-precio', [TmpCompraController::class, 'actualizarPrecio'])->name('admin.compras.tmp_compras.actualizarPrecio')->middleware('auth');
 
-//Clientes
+// Clientes
 Route::get('/admin/clientes', [ClienteController::class, 'index'])->name('admin.clientes.index')->middleware('auth', 'can:Ver Clientes');
 Route::get('/admin/clientes/create', [ClienteController::class, 'create'])->name('admin.clientes.create')->middleware('auth', 'can:Formulario Crear Clientes');
 Route::post('/admin/clientes', [ClienteController::class, 'store'])->name('admin.clientes.store')->middleware('auth', 'can:Guardar Clientes');
@@ -119,7 +125,7 @@ Route::put('/admin/clientes/{id}', [ClienteController::class, 'update'])->name('
 Route::delete('/admin/clientes/{id}', [ClienteController::class, 'destroy'])->name('admin.clientes.destroy')->middleware('auth', 'can:Eliminar Clientes');
 Route::get('clientes/restaurar/{id}', [ClienteController::class, 'restaurar'])->name('admin.clientes.restaurar')->middleware('auth', 'can:Restaurar Clientes');
 
-//Ventas
+// Ventas
 Route::get('/admin/ventas', [VentaController::class, 'index'])->name('admin.ventas.index')->middleware('auth', 'can:Ver Ventas');
 Route::get('/admin/ventas/create', [VentaController::class, 'create'])->name('admin.ventas.create')->middleware('auth', 'can:Formulario Crear Ventas');
 Route::post('/admin/ventas', [VentaController::class, 'store'])->name('admin.ventas.store')->middleware('auth', 'can:Guardar Ventas');
@@ -127,12 +133,12 @@ Route::get('/admin/ventas/{id}', [VentaController::class, 'show'])->name('admin.
 Route::get('/admin/ventas/pdf/{id}', [VentaController::class, 'pdf'])->name('admin.ventas.pdf')->middleware('auth', 'can:Imprimir Ventas');
 Route::put('/admin/ventas/{id}/anular', [VentaController::class, 'anular'])->name('admin.ventas.anular')->middleware('auth', 'can:Anular Ventas');
 
-//TPM ventas
+// TPM ventas
 Route::post('/admin/ventas/create/tmp', [TmpVentaController::class, 'tmp_ventas'])->name('admin.ventas.tmp_ventas')->middleware('auth');
 Route::delete('/admin/ventas/create/tmp/{id}', [TmpVentaController::class, 'destroy'])->name('admin.ventas.tmp_ventas.destroy')->middleware('auth');
 Route::post('/admin/ventas/actualizar-precio', [TmpVentaController::class, 'actualizarPrecio'])->name('admin.ventas.tmp_ventas.actualizarPrecio')->middleware('auth');
 
-//Cajas
+// Cajas
 Route::get('/admin/cajas', [CajaController::class, 'index'])->name('admin.cajas.index')->middleware('auth', 'can:Ver Cajas');
 Route::get('/admin/cajas/create', [CajaController::class, 'create'])->name('admin.cajas.create')->middleware('auth', 'can:Formulario Crear Cajas');
 Route::post('/admin/cajas', [CajaController::class, 'store'])->name('admin.cajas.store')->middleware('auth', 'can:Guardar Cajas');
@@ -144,11 +150,64 @@ Route::post('/admin/cajas/{id}/ingreso-egreso', [CajaController::class, 'store_i
 Route::get('/admin/cajas/{id}/cerrar', [CajaController::class, 'cerrar'])->name('admin.cajas.cerrar')->middleware('auth', 'can:Formulario Cierre Cajas');
 Route::post('/admin/cajas/{id}/cierre', [CajaController::class, 'store_cierre'])->name('admin.cajas.store_cierre')->middleware('auth', 'can:Guardar Cierre Cajas');
 
-//Backups
+// Backups
 Route::get('/admin/backups', [BackupController::class, 'index'])->name('admin.backups.index')->middleware('auth', 'can:Ver Listado de Backups');
 Route::post('/admin/backups/create', [BackupController::class, 'store'])->name('admin.backups.store')->middleware('auth', 'can:Crear Backups');
 Route::get('/admin/backups/{file}/download', [BackupController::class, 'download'])->name('admin.backups.download')->middleware('auth', 'can:Descargar Backups');
 Route::delete('/admin/backups/{file}/delete', [BackupController::class, 'destroy'])->name('admin.backups.destroy')->middleware('auth', 'can:Eliminar Backups');
 
-//Tiketera
+// Tiketera
 Route::get('/admin/test-ticket', [VentaController::class, 'testTicket'])->name('admin.test-ticket')->middleware('auth');
+
+// Probar arca facturación
+
+Route::get('/admin/test-afip', function () {
+
+    $pointOfSale = 1;
+
+    $next = Arca::getLastInvoiceNumber($pointOfSale, InvoiceType::FACTURA_C) + 1;
+
+    $request = new CreateInvoiceRequest(
+        concept: InvoiceConcept::GOODS,
+        pointOfSale: $pointOfSale,
+        identification: new Identification(
+            type: IdentificationType::CUIT,
+            number: 20111111112
+        ),
+        invoiceType: InvoiceType::FACTURA_C,
+        invoiceFrom: $next,
+        invoiceTo: $next,
+        total: 150,
+        net: 150,
+        exempt: 0,
+        nonTaxableConceptsAmount: 0,
+        vatCondition: 1,
+        currency: Currency::ARS,
+        currencyQuote: 1,
+        invoiceDate: now(),
+    );
+
+    dd(Arca::generateInvoice($request));
+})->middleware('auth', 'can:Facturación Elctrónica');
+/* Route::get('/admin/test-afip', function () {
+
+    $pointOfSale = 2;
+
+    $last = FacadesArca::getLastInvoiceNumber(
+        $pointOfSale,
+        \AgustinZamar\LaravelArcaSdk\Enums\InvoiceType::FACTURA_C
+    );
+
+    dd($last);
+})->middleware('auth', 'can:Facturación Elctrónica'); */
+/*
+Route::get('/admin/test-afip', function () {
+    $afip = new AfipService();
+
+    $res = $afip->facturar();
+
+    dd($res);
+});
+ */
+
+Route::get('/admin/invoice/{id}/imprimir', [VentaController::class, 'invoice'])->name('admin.invoices.imprimir')->middleware('auth', 'can:Invoice');

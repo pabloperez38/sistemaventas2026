@@ -4,8 +4,92 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "001e47a4a349932e588a9de5ed9a5a50",
+    "content-hash": "bc804b743c368ababe91357ac0eb43e7",
     "packages": [
+       
+        {
+            "name": "agustinzamar/laravel-arca-sdk",
+            "version": "v0.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/agustinzamar/laravel-arca-sdk.git",
+                "reference": "d51d148527b11f2666667904675adad63231064b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/agustinzamar/laravel-arca-sdk/zipball/d51d148527b11f2666667904675adad63231064b",
+                "reference": "d51d148527b11f2666667904675adad63231064b",
+                "shasum": ""
+            },
+            "require": {
+                "ext-openssl": "*",
+                "ext-simplexml": "*",
+                "ext-soap": "*",
+                "illuminate/contracts": "^11.0||^12.0",
+                "php": "^8.1||^8.2||^8.3||^8.4||^8.5",
+                "spatie/laravel-package-tools": "^1.16"
+            },
+            "require-dev": {
+                "larastan/larastan": "^3.0",
+                "laravel/pint": "^1.14",
+                "nunomaduro/collision": "^8.8",
+                "orchestra/testbench": "^10.0.0||^9.0.0",
+                "pestphp/pest": "^4.0",
+                "pestphp/pest-plugin-arch": "^4.0",
+                "pestphp/pest-plugin-laravel": "^4.0",
+                "phpstan/extension-installer": "^1.4",
+                "phpstan/phpstan-deprecation-rules": "^2.0",
+                "phpstan/phpstan-phpunit": "^2.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "Arca": "AgustinZamar\\LaravelArcaSdk\\Facades\\Arca"
+                    },
+                    "providers": [
+                        "AgustinZamar\\LaravelArcaSdk\\LaravelArcaSdkServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "AgustinZamar\\LaravelArcaSdk\\": "src/",
+                    "AgustinZamar\\LaravelArcaSdk\\Database\\Factories\\": "database/factories/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Agustin Zamar",
+                    "email": "agustinzamar33@gmail.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A Laravel package to easily use the ARCA (ex AFIP) web services.",
+            "homepage": "https://github.com/agustinzamar/laravel-arca-sdk",
+            "keywords": [
+                "Agustin Zamar",
+                "afip",
+                "arca",
+                "laravel",
+                "sdk"
+            ],
+            "support": {
+                "issues": "https://github.com/agustinzamar/laravel-arca-sdk/issues",
+                "source": "https://github.com/agustinzamar/laravel-arca-sdk/tree/v0.1.0"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/Agustin Zamar",
+                    "type": "github"
+                }
+            ],
+            "time": "2025-10-06T18:20:25+00:00"
+        },
         {
             "name": "barryvdh/laravel-dompdf",
             "version": "v3.1.2",

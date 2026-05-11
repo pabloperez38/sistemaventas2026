@@ -2,6 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use AgustinZamar\LaravelArcaSdk\Contracts\Request\CreateInvoiceRequest;
+use AgustinZamar\LaravelArcaSdk\Domain\Identification;
+use AgustinZamar\LaravelArcaSdk\Enums\Currency;
+use AgustinZamar\LaravelArcaSdk\Enums\IdentificationType;
+use AgustinZamar\LaravelArcaSdk\Enums\InvoiceConcept;
+use AgustinZamar\LaravelArcaSdk\Enums\InvoiceType;
+use AgustinZamar\LaravelArcaSdk\Facades\Arca;
 use App\Models\Caja;
 use App\Models\Cliente;
 use App\Models\Configuracion;
@@ -12,14 +19,15 @@ use App\Models\MovimientoCajaMetodo;
 use App\Models\Producto;
 use App\Models\TmpVenta;
 use App\Models\Venta;
-use Illuminate\Support\Str;
 use Barryvdh\DomPDF\Facade\PDF;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use NumberFormatter;
 use Illuminate\Support\Facades\Auth;
-use Mike42\Escpos\Printer;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Mike42\Escpos\PrintConnectors\WindowsPrintConnector;
+use Mike42\Escpos\Printer;
+use NumberFormatter;
 
 class VentaController extends Controller
 {
@@ -51,7 +59,7 @@ class VentaController extends Controller
             return redirect()->route('admin.cajas.create')->with('swal', [
                 'icon' => 'error',
                 'title' => 'Para vender debe abrir caja primero.',
-                'timer' => 2000
+                'timer' => 2000,
             ]);
         }
     }
@@ -79,7 +87,7 @@ class VentaController extends Controller
             return redirect()->route('admin.ventas.index')->with('swal', [
                 'icon' => 'error',
                 'title' => 'Debe agregar al menos un producto a la venta.',
-                'timer' => 2000
+                'timer' => 2000,
             ]);
         }
 
@@ -102,7 +110,7 @@ class VentaController extends Controller
                     'precio_final' => $total,
                     'cliente_id' => $request->cliente_id,
                     'caja_id' => $caja->id,
-                    'user_id' => Auth::id()
+                    'user_id' => Auth::id(),
                 ]);
 
                 // 🔥 PAGOS
@@ -113,14 +121,18 @@ class VentaController extends Controller
                 foreach ($pagos as $pago) {
 
                     $metodo = MetodoPago::find($pago['metodo']);
-                    if (!$metodo) continue;
+                    if (! $metodo) {
+                        continue;
+                    }
 
                     $montoInput = (float) $pago['monto'];
                     $totalPagadoInput += $montoInput;
 
                     // evitar guardar vuelto
                     $montoUsado = min($montoInput, $restante);
-                    if ($montoUsado <= 0) continue;
+                    if ($montoUsado <= 0) {
+                        continue;
+                    }
 
                     // ✅ guardar pago
                     $venta->pagos()->create([
@@ -144,7 +156,7 @@ class VentaController extends Controller
 
                 // 🔴 VALIDACIÓN
                 if (round($restante, 2) > 0) {
-                    throw new \Exception("El total pagado es menor al total de la venta");
+                    throw new \Exception('El total pagado es menor al total de la venta');
                 }
 
                 // 💰 VUELTO
@@ -159,7 +171,7 @@ class VentaController extends Controller
                         'producto_id' => $item->producto_id,
                         'cantidad' => $item->cantidad,
                         'proveedor_id' => $request->proveedor_id,
-                        'precio_venta' => $item->producto->precio_venta
+                        'precio_venta' => $item->producto->precio_venta,
                     ]);
 
                     $item->producto->decrement('stock', $item->cantidad);
@@ -180,7 +192,7 @@ class VentaController extends Controller
             return redirect()->route('admin.ventas.create')->with('swal', [
                 'icon' => 'success',
                 'title' => 'Venta creada exitosamente',
-                'timer' => 2000
+                'timer' => 2000,
             ]);
         } catch (\Exception $e) {
             dd($e->getMessage(), $e->getLine(), $e->getFile());
@@ -193,6 +205,7 @@ class VentaController extends Controller
     public function show($id)
     {
         $venta = Venta::with(['cliente', 'detalles.producto'])->findOrFail($id);
+
         return view('admin.ventas.show', compact('venta'));
     }
 
@@ -205,7 +218,7 @@ class VentaController extends Controller
             return redirect()->route('admin.ventas.index')->with('swal', [
                 'icon' => 'error',
                 'title' => 'La venta ya está anulada.',
-                'timer' => 2000
+                'timer' => 2000,
             ]);
         }
 
@@ -214,7 +227,7 @@ class VentaController extends Controller
             return redirect()->route('admin.ventas.index')->with('swal', [
                 'icon' => 'error',
                 'title' => 'No se puede anular una venta con más de 7 días.',
-                'timer' => 2000
+                'timer' => 2000,
             ]);
         }
 
@@ -237,7 +250,7 @@ class VentaController extends Controller
 
             // 🔹 anular venta
             $venta->update([
-                'activo' => 0
+                'activo' => 0,
             ]);
 
             // 🔹 buscar caja activa
@@ -251,12 +264,12 @@ class VentaController extends Controller
                     MovimientoCaja::create([
                         'monto' => $total,
                         'descripcion' => "Anulación de venta #{$venta->id}",
-                        'tipo' => "egreso",
+                        'tipo' => 'egreso',
                         'caja_id' => $caja->id,
                         'metodo_pago_id' => $efectivoPago->id ?? null,
                     ]);
                 } else {
-                    $pagosPorMetodo = $pagos->groupBy(fn($pago) => Str::of($pago->metodo ?? '')
+                    $pagosPorMetodo = $pagos->groupBy(fn ($pago) => Str::of($pago->metodo ?? '')
                         ->trim()
                         ->lower()
                         ->ascii()
@@ -268,7 +281,7 @@ class VentaController extends Controller
 
                     $metodoPagoMap = MetodoPago::whereIn('codigo', $pagosPorMetodo->keys()->filter()->values()->toArray())
                         ->get()
-                        ->keyBy(fn($metodoPago) => strtolower($metodoPago->codigo));
+                        ->keyBy(fn ($metodoPago) => strtolower($metodoPago->codigo));
 
                     foreach ($pagosPorMetodo as $codigo => $grupoPagos) {
                         $montoMetodo = round($grupoPagos->sum('monto'), 2);
@@ -278,7 +291,7 @@ class VentaController extends Controller
                         $movimiento = MovimientoCaja::create([
                             'monto' => $montoMetodo,
                             'descripcion' => "Anulación de venta #{$venta->id} ({$label})",
-                            'tipo' => "egreso",
+                            'tipo' => 'egreso',
                             'caja_id' => $caja->id,
                             'metodo_pago_id' => $metodoPago ? $metodoPago->id : null,
                         ]);
@@ -287,7 +300,7 @@ class VentaController extends Controller
                             MovimientoCajaMetodo::create([
                                 'movimiento_caja_id' => $movimiento->id,
                                 'metodo_pago_id' => $metodoPagoMap[$codigo]->id,
-                                'monto' => $montoMetodo
+                                'monto' => $montoMetodo,
                             ]);
                         }
                     }
@@ -298,7 +311,7 @@ class VentaController extends Controller
         return redirect()->route('admin.ventas.index')->with('swal', [
             'icon' => 'success',
             'title' => 'Venta anulada correctamente',
-            'timer' => 2000
+            'timer' => 2000,
         ]);
     }
 
@@ -313,10 +326,10 @@ class VentaController extends Controller
         $numero = floor($venta->precio_final);
         $centavos = round(($venta->precio_final - $numero) * 100);
 
-        $total_letras = ucfirst($formatter->format($numero)) . ' pesos';
+        $total_letras = ucfirst($formatter->format($numero)).' pesos';
 
         if ($centavos > 0) {
-            $total_letras .= ' con ' . $formatter->format($centavos) . ' centavos';
+            $total_letras .= ' con '.$formatter->format($centavos).' centavos';
         }
 
         $pdf = PDF::loadView('admin.ventas.pdf', compact('configuracion', 'venta', 'total_letras'));
@@ -324,61 +337,208 @@ class VentaController extends Controller
         return $pdf->stream();
     }
 
+    public function invoice($id)
+    {
+        $venta = Venta::with(['detalles.producto', 'pagos.metodoPago', 'cliente', 'user'])
+            ->findOrFail($id);
+
+        // ✅ SI YA TIENE CAE → SOLO IMPRIMIR
+        if (! empty($venta->cae)) {
+            $pdf = PDF::loadView('admin.ventas.invoice', compact('venta'));
+
+            return $pdf->stream();
+        }
+
+        // 🔴 SI NO TIENE CAE → GENERAR EN AFIP
+        $pointOfSale = 1;
+
+        $next = Arca::getLastInvoiceNumber(
+            $pointOfSale,
+            InvoiceType::FACTURA_C
+        );
+
+        $identification = new Identification(
+            type: IdentificationType::CUIT,
+            number: $venta->cliente->cuit ?? 0
+        );
+
+        $request = new CreateInvoiceRequest(
+            concept: InvoiceConcept::GOODS,
+            pointOfSale: $pointOfSale,
+            identification: $identification,
+            invoiceType: InvoiceType::FACTURA_C,
+            invoiceFrom: $next + 1,
+            invoiceTo: $next + 1,
+            total: (float) $venta->precio_final,
+            net: (float) $venta->precio_final,
+            exempt: 0,
+            nonTaxableConceptsAmount: 0,
+            vatCondition: 5,
+            currency: Currency::ARS,
+            currencyQuote: 1,
+            invoiceDate: now(),
+        );
+
+        $response = Arca::generateInvoice($request);
+
+        dd($venta);
+
+        if ($response->result->value === 'A' && isset($response->cae)) {
+
+            $venta->cae = $response->cae;
+            $venta->cae_vencimiento = $response->caeExpirationDate;
+            $venta->numero_factura = $response->invoiceFrom;
+            $venta->punto_venta = $pointOfSale;
+            $venta->tipo_comprobante = 'C';
+            $venta->save();
+        } else {
+            throw new \Exception('Error al generar factura AFIP');
+        }
+
+        // ✅ después de generar → imprimir
+        $pdf = PDF::loadView('admin.ventas.invoice', compact('venta'));
+
+        return $pdf->stream();
+    }
+
     public function ImprimirTicket($id)
     {
+
         try {
             // Función para alinear a la derecha
             function rightText($text, $width)
             {
                 $len = mb_strlen($text, 'UTF-8');
-                if ($len >= $width) return mb_substr($text, 0, $width);
-                return str_repeat(' ', $width - $len) . $text;
+                if ($len >= $width) {
+                    return mb_substr($text, 0, $width);
+                }
+
+                return str_repeat(' ', $width - $len).$text;
             }
 
             // Función para alinear a la izquierda
             function leftText($text, $width)
             {
                 $len = mb_strlen($text, 'UTF-8');
-                if ($len >= $width) return mb_substr($text, 0, $width);
-                return $text . str_repeat(' ', $width - $len);
+                if ($len >= $width) {
+                    return mb_substr($text, 0, $width);
+                }
+
+                return $text.str_repeat(' ', $width - $len);
             }
 
             $venta = Venta::with(['detalles.producto', 'pagos.metodoPago', 'cliente', 'user'])
                 ->findOrFail($id);
+            try {
 
+                if (! $venta->cae) {
+
+                    $pointOfSale = 1;
+
+                    $next = Arca::getLastInvoiceNumber(
+                        $pointOfSale,
+                        InvoiceType::FACTURA_C
+                    );
+
+                    $identification = new Identification(
+                        type: IdentificationType::CUIT,
+                        number: 20111111112
+                    );
+
+                    $request = new CreateInvoiceRequest(
+                        concept: InvoiceConcept::GOODS,
+                        pointOfSale: $pointOfSale,
+                        identification: $identification,
+                        invoiceType: InvoiceType::FACTURA_C,
+                        invoiceFrom: $next + 1,
+                        invoiceTo: $next + 1,
+                        total: (float) $venta->precio_final,
+                        net: (float) $venta->precio_final,
+                        exempt: 0,
+                        nonTaxableConceptsAmount: 0,
+                        vatCondition: 5,
+                        currency: Currency::ARS,
+                        currencyQuote: 1,
+                        invoiceDate: now(),
+                    );
+
+                    $response = Arca::generateInvoice($request);
+
+                    // dd($response);
+
+                    // ❗ IMPORTANTE: validar éxito real AFIP
+                    if ($response->result->value === 'A') {
+
+                        $venta->cae = $response->cae;
+                        $venta->cae_vencimiento = $response->caeExpirationDate;
+                        $venta->numero_factura = $response->invoiceFrom;
+                        $venta->punto_venta = $pointOfSale;
+                        $venta->tipo_comprobante = 'B';
+                        $venta->save();
+                    }
+                }
+            } catch (\Throwable $e) {
+
+                Log::error('ERROR AFIP: '.$e->getMessage());
+            }
             $config = Configuracion::first();
 
-            $connector = new WindowsPrintConnector("POS80");
+            $connector = new WindowsPrintConnector('POS80');
             $printer = new Printer($connector);
 
             $printer->setFont(Printer::FONT_A);
-            $line = str_repeat("-", 48) . "\n";
+            $line = str_repeat('-', 48)."\n";
 
             // 🏪 ENCABEZADO
             $printer->setJustification(Printer::JUSTIFY_CENTER);
             $printer->setEmphasis(true);
             $printer->setTextSize(2, 2);
-            $printer->text($config->nombre_empresa . "\n");
+            $printer->text($config->nombre_empresa."\n");
             $printer->setTextSize(1, 1);
             $printer->setEmphasis(false);
-            $printer->text("CUIT: " . $config->cuit . "\n");
+            $printer->text('CUIT: '.$config->cuit."\n");
 
-            if ($config->direccion) $printer->text($config->direccion . "\n");
-            if ($config->telefono) $printer->text("Tel: " . $config->telefono . "\n");
+            if ($config->direccion) {
+                $printer->text($config->direccion."\n");
+            }
+            if ($config->telefono) {
+                $printer->text('Tel: '.$config->telefono."\n");
+            }
+
+            $printer->text($line);
+
+            if ($venta->cae) {
+
+                $printer->setEmphasis(true);
+                $printer->text("FACTURA B\n");
+                $printer->setEmphasis(false);
+
+                $printer->text('Pto Vta: '.($venta->punto_venta ?? 1)."\n");
+                $printer->text('N° Factura: '.$venta->numero_factura."\n");
+                $printer->text('CAE: '.$venta->cae."\n");
+                $printer->text('Vto CAE: '.$venta->cae_vencimiento."\n");
+            } else {
+
+                $printer->setEmphasis(true);
+                $printer->text("TICKET INTERNO\n");
+                $printer->setEmphasis(false);
+
+                $printer->text('Venta #: '.$venta->id."\n");
+            }
 
             $printer->text($line);
 
             // 🧾 INFO VENTA
             $printer->setJustification(Printer::JUSTIFY_LEFT);
-            $printer->text("Venta #: " . $venta->id . "\n");
-            $printer->text("Fecha: " . $venta->created_at->format('d/m/Y H:i') . "\n");
+            $printer->text('Venta #: '.$venta->id."\n");
+            $printer->text('Fecha: '.$venta->created_at->format('d/m/Y H:i')."\n");
 
             if ($venta->user) {
-                $printer->text("Vendedor: " . $venta->user->name . "\n");
+                $printer->text('Vendedor: '.$venta->user->name."\n");
             }
 
             if ($venta->cliente) {
-                $printer->text("Cliente: " . $venta->cliente->nombre . "\n");
+                $printer->text('Cliente: '.$venta->cliente->nombre."\n");
             }
 
             $printer->text($line);
@@ -386,26 +546,31 @@ class VentaController extends Controller
             // 📋 CABECERA DE PRODUCTOS
             $printer->setEmphasis(true);
             $printer->text(
-                leftText("Detalle", 36) .
-                    rightText("Subtotal", 12) . "\n"
+                leftText('Detalle', 36).
+                    rightText('Subtotal', 12)."\n"
             );
             $printer->setEmphasis(false);
             $printer->text($line);
 
+            if ($venta->cae) {
+                $printer->text('CAE: '.$venta->cae."\n");
+                $printer->text('Vto: '.$venta->cae_vencimiento."\n");
+            }
+
             // 🛒 PRODUCTOS
             foreach ($venta->detalles as $detalle) {
-                $nombre = mb_strimwidth($detalle->producto->nombre ?? 'Producto', 0, 36, "");
+                $nombre = mb_strimwidth($detalle->producto->nombre ?? 'Producto', 0, 36, '');
                 $cantidad = $detalle->cantidad;
                 $precioUnitario = number_format($detalle->precio_venta, 2, '.', '');
                 $subtotal = number_format($detalle->cantidad * $detalle->precio_venta, 2, '.', '');
 
                 // Nombre del producto
-                $printer->text($nombre . "\n");
+                $printer->text($nombre."\n");
 
                 // Cantidad x Precio Unitario (indentado) y Subtotal alineado a la derecha
                 $printer->text(
-                    "  " . $cantidad . " x $" . $precioUnitario .
-                        rightText("$" . $subtotal, 48 - (mb_strlen("  " . $cantidad . " x $" . $precioUnitario))) . "\n"
+                    '  '.$cantidad.' x $'.$precioUnitario.
+                        rightText('$'.$subtotal, 48 - (mb_strlen('  '.$cantidad.' x $'.$precioUnitario)))."\n"
                 );
             }
 
@@ -415,8 +580,8 @@ class VentaController extends Controller
             $total = number_format($venta->precio_final, 2, '.', '');
             $printer->setEmphasis(true);
             $printer->text(
-                leftText("TOTAL", 36) .
-                    rightText("$" . $total, 12) . "\n"
+                leftText('TOTAL', 36).
+                    rightText('$'.$total, 12)."\n"
             );
             $printer->setEmphasis(false);
             $printer->text($line);
@@ -424,7 +589,7 @@ class VentaController extends Controller
             // 💳 PAGOS (después del total)
             if ($venta->pagos->count() > 0) {
                 $printer->setEmphasis(true);
-                $printer->text(leftText("Forma de Pago", 36) . rightText("Monto", 12) . "\n");
+                $printer->text(leftText('Forma de Pago', 36).rightText('Monto', 12)."\n");
                 $printer->setEmphasis(false);
 
                 $totalPagado = 0;
@@ -434,8 +599,8 @@ class VentaController extends Controller
                     $totalPagado += $pago->monto;
 
                     $printer->text(
-                        leftText($metodo, 36) .
-                            rightText("$" . $monto, 12) . "\n"
+                        leftText($metodo, 36).
+                            rightText('$'.$monto, 12)."\n"
                     );
                 }
 
@@ -448,8 +613,8 @@ class VentaController extends Controller
             if ($totalPagado > $venta->precio_final) {
                 $cambio = number_format($totalPagado - $venta->precio_final, 2, '.', '');
                 $printer->text(
-                    leftText("VUELTO", 36) .
-                        rightText("$" . $cambio, 12) . "\n"
+                    leftText('VUELTO', 36).
+                        rightText('$'.$cambio, 12)."\n"
                 );
                 $printer->text($line);
             }
@@ -465,9 +630,9 @@ class VentaController extends Controller
             $printer->cut();
             $printer->close();
 
-            return "Ticket impreso correctamente!";
+            return 'Ticket impreso correctamente!';
         } catch (\Exception $e) {
-            return "ERROR: " . $e->getMessage();
+            return 'ERROR: '.$e->getMessage();
         }
     }
 }
